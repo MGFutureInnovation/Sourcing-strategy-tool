@@ -1212,7 +1212,7 @@
         
         function getCurrentSelect() {
             const selects = [null, categorySelect, intentSelect, volumeSelect, timelineSelect, 
-                           positionSelect, crowdedSelect, capabilitySelect, ipSelect, investmentSelect];
+                           positionSelect, crowdedSelect, capabilitySelect, ipSelect, customizationSelect, investmentSelect];
             return selects[currentQuestion];
         }
         
@@ -1757,7 +1757,7 @@
             
             // Reset all selects
             [categorySelect, intentSelect, volumeSelect, timelineSelect, 
-             positionSelect, crowdedSelect, capabilitySelect, ipSelect, investmentSelect].forEach(select => {
+             positionSelect, crowdedSelect, capabilitySelect, ipSelect, customizationSelect, investmentSelect].forEach(select => {
                 select.value = '';
             });
             
@@ -1906,6 +1906,7 @@
                 crowded: 'Market Crowdedness',
                 capability: 'Internal Capability',
                 ip: 'IP Ownership',
+                customization: 'Customization Level',
                 investment: 'Investment Appetite'
             };
             
@@ -1956,7 +1957,7 @@
             };
             
             // CSV headers
-            let csv = 'Assessment ID,Date,Time,Sub-category,Recommendation,Strategic Goal,Volume,Timeline,Position,Crowdedness,Capability,IP Ownership,Investment,Challenge Notes\n';
+            let csv = 'Assessment ID,Date,Time,Sub-category,Recommendation,Strategic Goal,Volume,Timeline,Position,Crowdedness,Capability,IP Ownership,Customization,Investment,Challenge Notes\n';
             
             // CSV rows
             assessments.forEach(a => {
@@ -1967,7 +1968,7 @@
                 csv += `"${a.id}","${dateStr}","${timeStr}","${a.category}","${approaches[a.approach]}",`;
                 csv += `"${a.answers.intent || ''}","${a.answers.volume || ''}","${a.answers.timeline || ''}",`;
                 csv += `"${a.answers.position || ''}","${a.answers.crowded || ''}","${a.answers.capability || ''}",`;
-                csv += `"${a.answers.ip || ''}","${a.answers.investment || ''}","${(a.challengeNotes || '').replace(/"/g, '""')}"\n`;
+                csv += `"${a.answers.ip || ''}","${a.answers.customization || ''}","${a.answers.investment || ''}","${(a.challengeNotes || '').replace(/"/g, '""')}"\n`;
             });
             
             // Download
@@ -2011,21 +2012,21 @@
             const dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
             const notes = document.getElementById('challengeNotes')?.value || '';
             
-            // Create PowerPoint-optimized screenshot (16:9 aspect ratio - 1920x1080)
+            // FIXED: Create PowerPoint-optimized screenshot (16:9 aspect ratio - 1920x1080) with proper right padding
             const container = document.createElement('div');
             container.className = 'screenshot-container';
             container.innerHTML = `
-                <div style="width: 1920px; height: 1080px; background: white; padding: 35px 50px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column;">
+                <div style="width: 1920px; height: 1080px; background: white; padding: 35px 60px 35px 50px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
                     <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; padding-bottom: 15px; border-bottom: 3px solid #667eea;">
-                        <div style="flex: 1; max-width: 65%;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; padding-bottom: 15px; border-bottom: 3px solid #667eea; gap: 20px;">
+                        <div style="flex: 1; min-width: 0;">
                             <h1 style="font-size: 36px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ${rec.title}</h1>
                             <p style="font-size: 18px; color: #718096; margin: 0; line-height: 1.3;">${rec.subtitle}</p>
                         </div>
-                        <div style="text-align: right; font-size: 16px; color: #4a5568; flex-shrink: 0;">
-                            <div style="margin-bottom: 4px;"><strong>Category:</strong> ${categoryText}</div>
-                            <div style="margin-bottom: 8px;"><strong>Date:</strong> ${dateText}</div>
-                            <div style="padding: 6px 16px; background: #667eea; color: white; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px;">${rec.title}</div>
+                        <div style="text-align: right; font-size: 15px; color: #4a5568; flex-shrink: 0; min-width: 280px; max-width: 320px;">
+                            <div style="margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>Category:</strong> ${categoryText}</div>
+                            <div style="margin-bottom: 8px; white-space: nowrap;"><strong>Date:</strong> ${dateText}</div>
+                            <div style="padding: 6px 14px; background: #667eea; color: white; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 14px; white-space: nowrap;">${rec.title}</div>
                         </div>
                     </div>
                     
