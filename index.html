@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mayborn Innovation Sourcing Strategy Tool</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -635,7 +636,7 @@
     <div class="container">
         <h1>Innovation Sourcing Strategy Tool</h1>
         <p class="subtitle">Answer a few questions to find the right approach for your project</p>
-        <div class="version-footer">v1.2 | November 2025 | PPT-Optimized</div>
+        <div class="version-footer">v1.3 | November 2025 | Email Notifications</div>
         <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
         
         <!-- Welcome Screen -->
@@ -671,6 +672,22 @@
                     <p style="color: #92400e; font-size: 15px; line-height: 1.6; margin: 0;">
                         <strong style="color: #78350f;">⚠️ Note:</strong> This tool is designed for product development decisions in established categories. For R&D opportunities or moonshot concepts, consult Future Innovation Lead.
                     </p>
+                </div>
+                
+                <!-- Optional Name Field for Admin Tracking -->
+                <div style="margin-bottom: 20px;">
+                    <label for="userName" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748; font-size: 15px;">
+                        Your Name (Optional - helps with admin tracking)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="userName" 
+                        placeholder="e.g., Sarah Johnson - Feeding Category"
+                        style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px;"
+                    />
+                    <div style="font-size: 13px; color: #718096; margin-top: 4px;">
+                        Helps the innovation team track tool usage and follow up if needed
+                    </div>
                 </div>
                 
                 <button class="btn-primary" onclick="startAssessment()" style="width: 100%; padding: 16px; font-size: 17px;">
@@ -1006,6 +1023,86 @@
             } catch (e) {
                 console.warn('Could not clear progress:', e);
             }
+        }
+        
+        // EmailJS Configuration and Email Notification Function
+        // SETUP REQUIRED: Follow instructions in email-setup-guide.md
+        
+        const EMAIL_CONFIG = {
+            enabled: true, // Set to false to disable email notifications
+            serviceId: 'YOUR_SERVICE_ID', // Replace after EmailJS setup
+            templateId: 'YOUR_TEMPLATE_ID', // Replace after EmailJS setup
+            publicKey: 'YOUR_PUBLIC_KEY', // Replace after EmailJS setup
+            adminEmail: 'jhume@mayborngroup.com'
+        };
+        
+        function initializeEmailJS() {
+            if (!EMAIL_CONFIG.enabled) return false;
+            
+            // Check if EmailJS is configured
+            if (EMAIL_CONFIG.serviceId === 'YOUR_SERVICE_ID' || 
+                EMAIL_CONFIG.templateId === 'YOUR_TEMPLATE_ID' ||
+                EMAIL_CONFIG.publicKey === 'YOUR_PUBLIC_KEY') {
+                console.log('EmailJS not configured yet - email notifications disabled');
+                return false;
+            }
+            
+            try {
+                emailjs.init(EMAIL_CONFIG.publicKey);
+                return true;
+            } catch (e) {
+                console.warn('EmailJS initialization failed:', e);
+                return false;
+            }
+        }
+        
+        function sendAdminNotification(assessment, recommendation) {
+            // Don't block the UI if email fails
+            if (!EMAIL_CONFIG.enabled || !initializeEmailJS()) {
+                return; // Silently skip if not configured
+            }
+            
+            const userName = document.getElementById('userName')?.value || 'Anonymous User';
+            const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+            const dateText = new Date().toLocaleDateString('en-GB', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Prepare email parameters
+            const emailParams = {
+                to_email: EMAIL_CONFIG.adminEmail,
+                user_name: userName,
+                category: categoryText,
+                recommendation: recommendation.title,
+                recommendation_subtitle: recommendation.subtitle,
+                date: dateText,
+                strategic_intent: answers.intent || 'Not specified',
+                expected_volume: answers.volume || 'Not specified',
+                timeline: answers.timeline || 'Not specified',
+                capability: answers.capability || 'Not specified',
+                investment: answers.investment || 'Not specified',
+                challenge_notes: assessment.challengeNotes || 'None - user agrees with recommendation',
+                // Key trade-offs as string
+                tradeoffs: recommendation.tradeoffs.map(t => `${t.label}: ${t.value}`).join(' | '),
+                // Accepting summary
+                accepting: recommendation.accepting.slice(0, 3).join('; '),
+                // Sacrificing summary  
+                sacrificing: recommendation.sacrificing.slice(0, 3).join('; ')
+            };
+            
+            // Send email asynchronously (don't block UI)
+            emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, emailParams)
+                .then(function(response) {
+                    console.log('Admin notification sent successfully', response.status, response.text);
+                })
+                .catch(function(error) {
+                    console.warn('Failed to send admin notification:', error);
+                    // Don't show error to user - this is a background feature
+                });
         }
         
         // Question elements
@@ -1473,6 +1570,9 @@
             };
             
             const rec = recommendations[approach];
+            
+            // Send admin notification email (non-blocking, fails silently if not configured)
+            sendAdminNotification(assessment, rec);
             
             document.getElementById('approachTitle').textContent = rec.title;
             document.getElementById('approachSubtitle').textContent = rec.subtitle;
