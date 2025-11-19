@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mayborn Innovation Sourcing Strategy Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .version-footer {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            color: #a0aec0;
+            font-size: 11px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        .question-container.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .question {
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .hint {
+            background: #edf2f7;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #4a5568;
+            font-size: 14px;
+            border-left: 4px solid #667eea;
+        }
+        
+        select, .option-button {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            text-align: left;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .option-button:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 14px 28px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        .recommendation {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .recommendation.active {
+            display: block;
+        }
+        
+        .recommendation-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .recommendation-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .recommendation-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title span {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .icon {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .card {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .card-content {
+            color: #4a5568;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .warning-box strong {
+            color: #c53030;
+        }
+        
+        .warning-box strong::before {
+            content: "▲ ";
+            margin-right: 6px;
+        }
+        
+        .tradeoffs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .tradeoff-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .tradeoff-label {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tradeoff-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        
+        .btn-restart {
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .welcome-screen {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .welcome-content h2 {
+            text-align: center;
+        }
+        
+        .constraint-triangle {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+        }
+        
+        .constraint-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .constraint-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .constraint-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .recommendation-summary {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+        
+        .summary-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .summary-title-section h3 {
+            font-size: 26px;
+            color: #2d3748;
+            margin-bottom: 6px;
+        }
+        
+        .summary-title-section p {
+            font-size: 14px;
+            color: #718096;
+        }
+        
+        .summary-meta {
+            text-align: right;
+            font-size: 13px;
+            color: #718096;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-section h4 {
+            font-size: 15px;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .summary-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .summary-section li {
+            padding: 6px 0;
+            color: #4a5568;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .summary-section li::before {
+            content: "• ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .accepting-item {
+            color: #38a169;
+        }
+        
+        .accepting-item::before {
+            content: "✓ ";
+            color: #38a169;
+        }
+        
+        .sacrificing-item {
+            color: #e53e3e;
+        }
+        
+        .sacrificing-item::before {
+            content: "✗ ";
+            color: #e53e3e;
+        }
+        
+        .summary-footer {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+            text-align: center;
+            font-size: 13px;
+            color: #718096;
+        }
+        
+        .delay-warning-box {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .delay-warning-box h4 {
+            color: #d97706;
+            font-size: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .delay-warning-box p {
+            color: #78350f;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        
+        .delay-warning-box ul {
+            margin: 12px 0 0 20px;
+            color: #78350f;
+        }
+        
+        .approach-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .approach-own {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .approach-joint {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .approach-partner {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .approach-source {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        .btn-view-details {
+            padding: 6px 16px;
+            font-size: 13px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-view-details:hover {
+            background: #5568d3;
+        }
+        
+        #adminView table tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        #adminView table tbody tr:hover {
+            background: #f7fafc;
+        }
+        
+        #adminView table tbody td {
+            padding: 16px;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        .screenshot-container {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+            background: white;
+            width: 1400px;
+            padding: 40px;
+        }
+        
+        .screenshot-page {
+            background: white;
+            margin-bottom: 40px;
+            page-break-after: always;
+        }
+        
+        .screenshot-summary {
+            background: white;
+            padding: 30px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+        }
+        
+        .screenshot-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 25px;
+        }
+        
+        .screenshot-detail-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .screenshot-detail-section h4 {
+            font-size: 16px;
+            color: #2d3748;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        
+        .screenshot-detail-section p, .screenshot-detail-section li {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+        
+        .screenshot-detail-section ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+            .btn-restart, .button-group {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 24px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .question {
+                font-size: 18px;
+            }
+            
+            .recommendation-title {
+                font-size: 28px;
+            }
+            
+            .constraint-triangle {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Innovation Sourcing Strategy Tool</h1>
+        <p class="subtitle">Answer a few questions to find the right approach for your project</p>
+        <div class="version-footer">v1.1 | November 2025</div>
+        <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
+        
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-content">
+                <h2 style="color: #2d3748; margin-bottom: 20px; font-size: 24px;">Every Development Project Faces Three Constraints</h2>
+                
+                <div class="constraint-triangle">
+                    <div class="constraint-item">
+                        <div class="constraint-icon">⏱</div>
+                        <div class="constraint-label">Speed to Market</div>
+                    </div>
+                    <div class="constraint-item">
+                        <div class="constraint-icon">◆</div>
+                        <div class="constraint-label">Brand Differentiation</div>
+                    </div>
+                    <div class="constraint-item">
+                        <div class="constraint-icon">£</div>
+                        <div class="constraint-label">Investment & Risk</div>
+                    </div>
+                </div>
+                
+                <div style="background: #f7fafc; padding: 24px; border-radius: 12px; border-left: 4px solid #667eea; margin: 30px 0;">
+                    <p style="color: #2d3748; font-size: 16px; line-height: 1.7; margin-bottom: 12px;">
+                        <strong>You can optimize for two, but rarely all three.</strong> Projects that try to maximize speed, differentiation, AND minimize investment typically stall in paralysis while competitors move forward with "good enough" solutions.
+                    </p>
+                    <p style="color: #4a5568; font-size: 15px; line-height: 1.7; margin: 0;">
+                        This tool helps you make deliberate choices about which constraints matter most for this specific project, then recommends an approach that aligns with your priorities. The output creates a consistent position from scoping through business case.
+                    </p>
+                </div>
+                
+                <div style="background: #fffbeb; padding: 20px 24px; border-radius: 12px; border-left: 4px solid #f59e0b; margin: 20px 0 30px 0;">
+                    <p style="color: #92400e; font-size: 15px; line-height: 1.6; margin: 0;">
+                        <strong style="color: #78350f;">⚠️ Note:</strong> This tool is designed for product development decisions in established categories. For R&D opportunities or moonshot concepts, consult Future Innovation Lead.
+                    </p>
+                </div>
+                
+                <button class="btn-primary" onclick="startAssessment()" style="width: 100%; padding: 16px; font-size: 17px;">
+                    Start Assessment
+                </button>
+            </div>
+        </div>
+        
+        <div class="assessment-content" id="assessmentContent" style="display: none;">
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <!-- Question 1: Sub-Category -->
+        <div class="question-container active" id="q1">
+            <div class="question">What sub-category is this project for?</div>
+            <div class="hint">Be specific - decisions differ significantly within categories</div>
+            <select id="category">
+                <option value="">Select sub-category...</option>
+                <optgroup label="Bottle Feeding">
+                    <option value="bottles-teats">Bottles and Teats</option>
+                    <option value="warmers">Electricals - Warmers</option>
+                    <option value="prep">Electricals - Prep (Perfect Prep)</option>
+                    <option value="bf-accessories">Accessories (brushes, racks, dispensers)</option>
+                </optgroup>
+                <optgroup label="Breastfeeding">
+                    <option value="pumps">Electricals - Pumps</option>
+                    <option value="bf-future">Future (TMD, etc)</option>
+                    <option value="bf-other">Other (creams, pads)</option>
+                </optgroup>
+                <optgroup label="Changetime">
+                    <option value="changetime-core">Core (Twist & Click, refills)</option>
+                    <option value="changetime-future">Future innovations</option>
+                </optgroup>
+                <optgroup label="Comfort">
+                    <option value="soothers-core">Core Soothers</option>
+                    <option value="soothers-specialist">Specialist Soothers (ortho, preemie, sleep)</option>
+                    <option value="comfort-other">Other (teethers, holders)</option>
+                </optgroup>
+                <optgroup label="Electricals">
+                    <option value="sleep-aids">Sleep Aids (Dreammaker, Groclock)</option>
+                    <option value="monitors">Sleep Monitoring</option>
+                    <option value="sterilisers">Sterilisers</option>
+                </optgroup>
+                <optgroup label="Healthcare">
+                    <option value="healthcare">Healthcare (thermometers, grooming kits)</option>
+                </optgroup>
+                <optgroup label="Toddler">
+                    <option value="cups">Cups</option>
+                    <option value="toddler-accessories">Accessories (tableware, lunchboxes)</option>
+                </optgroup>
+            </select>
+        </div>
+        
+        <!-- Question 2: Strategic Intent -->
+        <div class="question-container" id="q2">
+            <div class="question">What's the primary goal of this project?</div>
+            <div class="hint">Be honest - there's no wrong answer, but it affects everything else</div>
+            <select id="intent">
+                <option value="">Select your goal...</option>
+                <option value="core-brand">Build/defend core brand differentiation</option>
+                <option value="test-learn">Quick market read / test & learn</option>
+                <option value="tactical">Fill tactical gap in range</option>
+                <option value="market-share">Grab share in a big market opportunity</option>
+                <option value="new-entry">Enter new category/space</option>
+            </select>
+        </div>
+        
+        <!-- Question 3: Volume Expectations -->
+        <div class="question-container" id="q3">
+            <div class="question">What's your volume expectation?</div>
+            <div class="hint">Be realistic - this drives economics more than anything</div>
+            <select id="volume">
+                <option value="">Select volume range...</option>
+                <option value="very-high">Very high (200K+ units/year) - bottles, soothers, refills</option>
+                <option value="high">High (50-200K units/year) - established core products</option>
+                <option value="medium">Medium (10-50K units/year) - typical once established</option>
+                <option value="low">Low/Uncertain (&lt;10K units/year) - niche or new</option>
+            </select>
+        </div>
+        
+        <!-- Question 4: Timeline -->
+        <div class="question-container" id="q4">
+            <div class="question">What's your timeline to market?</div>
+            <div class="hint">Consider retail cycles and competitive pressure</div>
+            <select id="timeline">
+                <option value="">Select timeline...</option>
+                <option value="urgent">Urgent - need to launch in &lt;6 months</option>
+                <option value="fast">Fast - 6-9 months acceptable</option>
+                <option value="moderate">Moderate - 9-15 months is fine</option>
+                <option value="patient">Patient - can wait 18+ months for the right solution</option>
+            </select>
+        </div>
+        
+        <!-- Question 5: Market Position -->
+        <div class="question-container" id="q5">
+            <div class="question">What's your current position in this specific sub-category?</div>
+            <div class="hint">Where you are today affects risk appetite</div>
+            <select id="position">
+                <option value="">Select position...</option>
+                <option value="leader">Market leader - strong share & brand presence</option>
+                <option value="player">Established player - decent share, room to grow</option>
+                <option value="challenger">Challenger - minimal share but present</option>
+                <option value="new">New - no current presence</option>
+            </select>
+        </div>
+        
+        <!-- Question 6: Market Crowdedness -->
+        <div class="question-container" id="q6">
+            <div class="question">How crowded is this market space?</div>
+            <div class="hint">Competition affects how much differentiation matters</div>
+            <select id="crowded">
+                <option value="">Select crowdedness...</option>
+                <option value="open">Relatively open - few credible players</option>
+                <option value="moderate">Moderately competitive - 3-5 strong brands</option>
+                <option value="crowded">Crowded - many players, price-driven</option>
+                <option value="saturated">Highly saturated - commodity market</option>
+            </select>
+        </div>
+        
+        <!-- Question 7: Capability Fit -->
+        <div class="question-container" id="q7">
+            <div class="question">Do you have in-house capability to develop this?</div>
+            <div class="hint">Capability includes R&D know-how, IP, compliance, manufacturing relationships</div>
+            <select id="capability">
+                <option value="">Select capability fit...</option>
+                <option value="strong">Strong - we have the expertise and IP</option>
+                <option value="some">Some - we have partial capability, need help</option>
+                <option value="weak">Weak - this is outside our wheelhouse</option>
+                <option value="none">None - completely new territory</option>
+            </select>
+        </div>
+        
+        <!-- Question 8: IP Ownership -->
+        <div class="question-container" id="q8">
+            <div class="question">For this sub-category, who owns the critical IP/patents?</div>
+            <div class="hint">This is a reality check - existing IP ownership constrains your options</div>
+            <select id="ip">
+                <option value="">Select IP ownership...</option>
+                <option value="own-all">We own all key IP/patents (existing products)</option>
+                <option value="own-most">We own most, partner has some</option>
+                <option value="shared">Shared ownership / existing joint venture</option>
+                <option value="partner-owns">Partner owns most/all critical IP</option>
+                <option value="greenfield">Greenfield NPD - no IP yet, we want to develop it</option>
+                <option value="none">No significant IP exists (commodity/mature tech)</option>
+            </select>
+        </div>
+        
+        <!-- Question 9: Customization Level -->
+        <div class="question-container" id="q9">
+            <div class="question">What level of product customization do you need?</div>
+            <div class="hint">Be honest about what differentiation actually requires</div>
+            <select id="customization">
+                <option value="">Select customization level...</option>
+                <option value="branding">Branding & aesthetics only (colors, logo, packaging, finishes)</option>
+                <option value="design">External design changes (shape, ergonomics, housing, button layout)</option>
+                <option value="performance">Performance tuning (algorithms, heating curves, functionality tweaks)</option>
+                <option value="core-tech">Core technology from scratch (no existing platform fits)</option>
+            </select>
+        </div>
+        
+        <!-- Question 10: Investment Appetite -->
+        <div class="question-container" id="q10">
+            <div class="question">What's your investment appetite for this project?</div>
+            <div class="hint">Consider both capex and risk if it doesn't work</div>
+            <select id="investment">
+                <option value="">Select investment appetite...</option>
+                <option value="high">High - strategic priority, prepared for 500K+ investment</option>
+                <option value="moderate">Moderate - can invest 100-250K if justified</option>
+                <option value="low">Low - need to keep investment under 100K</option>
+                <option value="minimal">Minimal - prove it works before any significant investment</option>
+            </select>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-secondary" id="backBtn" style="display: none;">Back</button>
+            <button class="btn-primary" id="nextBtn" disabled>Next</button>
+        </div>
+        
+        <!-- Recommendation Section -->
+        <div class="recommendation" id="recommendation">
+            <div class="recommendation-header">
+                <div class="recommendation-title" id="approachTitle"></div>
+                <div class="recommendation-subtitle" id="approachSubtitle"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>WHY</span>
+                    Why This Approach?
+                </div>
+                <div class="card">
+                    <div class="card-content" id="rationale"></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>TRADE-OFFS</span>
+                    Key Trade-Offs
+                </div>
+                <div class="tradeoffs" id="tradeoffs"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>IMPACT</span>
+                    What This Means In Practice
+                </div>
+                <div id="implications"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>RISKS</span>
+                    Watch Out For
+                </div>
+                <div id="warnings"></div>
+            </div>
+            
+            <div class="section" id="clarificationSection" style="display: none;">
+                <div class="section-title">
+                    <span>CLARITY</span>
+                    <span id="clarificationTitle"></span>
+                </div>
+                <div id="clarification"></div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>REVIEW</span>
+                    When To Reconsider
+                </div>
+                <div class="card">
+                    <div class="card-content" id="reconsider"></div>
+                </div>
+            </div>
+            
+            <button class="btn-primary btn-restart" onclick="restart()">Start New Assessment</button>
+        </div>
+        
+        </div><!-- Close assessment-content -->
+    </div>
+    
+    <!-- Admin View -->
+    <div class="container" id="adminView" style="display: none; max-width: 1200px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <h1 style="margin-bottom: 8px;">Assessment History</h1>
+                <p class="subtitle">View all completed assessments</p>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-secondary" onclick="exportAssessmentsCSV()">Export CSV</button>
+                <button class="btn-secondary" onclick="hideAdminView()">Back to Tool</button>
+            </div>
+        </div>
+        
+        <div style="background: white; border-radius: 12px; overflow: hidden; border: 2px solid #e2e8f0;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #f7fafc;">
+                    <tr>
+                        <th style="padding: 16px; text-align: left; font-weight: 700; color: #2d3748; border-bottom: 2px solid #e2e8f0;">ID</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 700; color: #2d3748; border-bottom: 2px solid #e2e8f0;">Date/Time</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 700; color: #2d3748; border-bottom: 2px solid #e2e8f0;">Sub-category</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 700; color: #2d3748; border-bottom: 2px solid #e2e8f0;">Recommendation</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 700; color: #2d3748; border-bottom: 2px solid #e2e8f0;">Challenge Notes</th>
+                        <th style="padding: 16px; text-align: left; font-weight: 700; color: #2d3748; border-bottom: 2px solid #e2e8f0;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal for viewing assessment details -->
+    <div id="assessmentModal" onclick="if(event.target===this) closeModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 16px; padding: 40px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative;">
+            <button onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">&times;</button>
+            <div id="assessmentDetails">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentQuestion = 1;
+        const totalQuestions = 10;
+        const answers = {};
+        
+        // Progress saving functionality
+        function saveProgress() {
+            const progress = {
+                currentQuestion: currentQuestion,
+                answers: answers,
+                timestamp: new Date().toISOString()
+            };
+            try {
+                localStorage.setItem('sourcingToolProgress', JSON.stringify(progress));
+            } catch (e) {
+                console.warn('Could not save progress:', e);
+            }
+        }
+        
+        function restoreProgress() {
+            try {
+                const saved = localStorage.getItem('sourcingToolProgress');
+                if (saved) {
+                    const progress = JSON.parse(saved);
+                    // Check if saved within last 7 days
+                    const savedDate = new Date(progress.timestamp);
+                    const daysSince = (new Date() - savedDate) / (1000 * 60 * 60 * 24);
+                    
+                    if (daysSince < 7 && progress.currentQuestion && progress.currentQuestion < totalQuestions) {
+                        if (confirm('You have an unfinished assessment from ' + savedDate.toLocaleDateString() + '. Would you like to continue where you left off?')) {
+                            Object.assign(answers, progress.answers);
+                            currentQuestion = progress.currentQuestion;
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not restore progress:', e);
+            }
+            return false;
+        }
+        
+        function clearProgress() {
+            try {
+                localStorage.removeItem('sourcingToolProgress');
+            } catch (e) {
+                console.warn('Could not clear progress:', e);
+            }
+        }
+        
+        // Question elements
+        const categorySelect = document.getElementById('category');
+        const intentSelect = document.getElementById('intent');
+        const volumeSelect = document.getElementById('volume');
+        const timelineSelect = document.getElementById('timeline');
+        const positionSelect = document.getElementById('position');
+        const crowdedSelect = document.getElementById('crowded');
+        const capabilitySelect = document.getElementById('capability');
+        const ipSelect = document.getElementById('ip');
+        const customizationSelect = document.getElementById('customization');
+        const investmentSelect = document.getElementById('investment');
+        
+        // Navigation
+        const nextBtn = document.getElementById('nextBtn');
+        const backBtn = document.getElementById('backBtn');
+        
+        // Add event listeners
+        categorySelect.addEventListener('change', () => handleAnswer('category', categorySelect.value));
+        intentSelect.addEventListener('change', () => handleAnswer('intent', intentSelect.value));
+        volumeSelect.addEventListener('change', () => handleAnswer('volume', volumeSelect.value));
+        timelineSelect.addEventListener('change', () => handleAnswer('timeline', timelineSelect.value));
+        positionSelect.addEventListener('change', () => handleAnswer('position', positionSelect.value));
+        crowdedSelect.addEventListener('change', () => handleAnswer('crowded', crowdedSelect.value));
+        capabilitySelect.addEventListener('change', () => handleAnswer('capability', capabilitySelect.value));
+        ipSelect.addEventListener('change', () => handleAnswer('ip', ipSelect.value));
+        customizationSelect.addEventListener('change', () => handleAnswer('customization', customizationSelect.value));
+        investmentSelect.addEventListener('change', () => handleAnswer('investment', investmentSelect.value));
+        
+        nextBtn.addEventListener('click', nextQuestion);
+        backBtn.addEventListener('click', previousQuestion);
+        
+        function startAssessment() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('assessmentContent').style.display = 'block';
+            
+            // Try to restore saved progress
+            if (restoreProgress()) {
+                // Progress was restored, update UI to match
+                for (let i = 1; i < currentQuestion; i++) {
+                    document.getElementById('q' + i).classList.remove('active');
+                }
+                document.getElementById('q' + currentQuestion).classList.add('active');
+                
+                // Populate select elements with saved answers
+                if (answers.category) categorySelect.value = answers.category;
+                if (answers.intent) intentSelect.value = answers.intent;
+                if (answers.volume) volumeSelect.value = answers.volume;
+                if (answers.timeline) timelineSelect.value = answers.timeline;
+                if (answers.position) positionSelect.value = answers.position;
+                if (answers.crowded) crowdedSelect.value = answers.crowded;
+                if (answers.capability) capabilitySelect.value = answers.capability;
+                if (answers.ip) ipSelect.value = answers.ip;
+                if (answers.customization) customizationSelect.value = answers.customization;
+                if (answers.investment) investmentSelect.value = answers.investment;
+                
+                updateProgress();
+                updateNavigation();
+                
+                // Enable next button if current question has an answer
+                const currentSelect = getCurrentSelect();
+                nextBtn.disabled = !currentSelect.value;
+            }
+        }
+        
+        function handleAnswer(key, value) {
+            if (value) {
+                answers[key] = value;
+                nextBtn.disabled = false;
+                saveProgress();
+            } else {
+                delete answers[key];
+                nextBtn.disabled = true;
+                saveProgress();
+            }
+        }
+        
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions) {
+                document.getElementById('q' + currentQuestion).classList.remove('active');
+                currentQuestion++;
+                document.getElementById('q' + currentQuestion).classList.add('active');
+                updateProgress();
+                updateNavigation();
+                
+                // Check if current question already has an answer
+                const currentSelect = getCurrentSelect();
+                nextBtn.disabled = !currentSelect.value;
+            } else {
+                showRecommendation();
+            }
+        }
+        
+        function previousQuestion() {
+            if (currentQuestion > 1) {
+                document.getElementById('q' + currentQuestion).classList.remove('active');
+                currentQuestion--;
+                document.getElementById('q' + currentQuestion).classList.add('active');
+                updateProgress();
+                updateNavigation();
+                
+                const currentSelect = getCurrentSelect();
+                nextBtn.disabled = !currentSelect.value;
+            }
+        }
+        
+        function getCurrentSelect() {
+            const selects = [null, categorySelect, intentSelect, volumeSelect, timelineSelect, 
+                           positionSelect, crowdedSelect, capabilitySelect, ipSelect, investmentSelect];
+            return selects[currentQuestion];
+        }
+        
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        function updateNavigation() {
+            backBtn.style.display = currentQuestion > 1 ? 'block' : 'none';
+            nextBtn.textContent = currentQuestion === totalQuestions ? 'Get Recommendation' : 'Next';
+        }
+        
+        function calculateRecommendation() {
+            // Decision logic
+            const scores = {
+                own: 0,
+                joint: 0,
+                partner: 0,
+                source: 0
+            };
+            
+            // Intent scoring
+            if (answers.intent === 'core-brand') {
+                scores.own += 3;
+                scores.joint += 2;
+            } else if (answers.intent === 'test-learn') {
+                scores.partner += 3;
+                scores.source += 2;
+            } else if (answers.intent === 'tactical') {
+                scores.source += 3;
+                scores.partner += 1;
+            } else if (answers.intent === 'market-share') {
+                scores.source += 2;
+                scores.partner += 2;
+            } else if (answers.intent === 'new-entry') {
+                scores.partner += 3;
+                scores.joint += 1;
+            }
+            
+            // Volume scoring - high volume makes Own more economically viable
+            if (answers.volume === 'very-high') {
+                scores.own += 3; // Increased - economies of scale justify investment
+                scores.source += 2; // Source also good at high volume
+            } else if (answers.volume === 'high') {
+                scores.own += 2;
+                scores.source += 2;
+            } else if (answers.volume === 'medium') {
+                scores.partner += 2;
+                scores.own -= 2; // Can't justify 500K+ investment at 10-50K units
+            } else if (answers.volume === 'low') {
+                scores.partner += 3;
+                scores.source += 2;
+                scores.own -= 4; // Heavily penalize Own - investment makes no sense at <10K units
+            }
+            
+            // Timeline scoring
+            if (answers.timeline === 'urgent' || answers.timeline === 'fast') {
+                scores.source += 3;
+                scores.partner += 2;
+                scores.own -= 2;
+                scores.joint -= 3;
+            } else if (answers.timeline === 'patient') {
+                scores.own += 2;
+                scores.joint += 1;
+            }
+            
+            // Position scoring
+            if (answers.position === 'leader') {
+                scores.own += 3; // Increased weight for market leaders
+            } else if (answers.position === 'player') {
+                scores.own += 1;
+            } else if (answers.position === 'new') {
+                scores.partner += 2;
+                scores.source += 1;
+            }
+            
+            // Crowdedness scoring - but context matters
+            if (answers.crowded === 'open') {
+                scores.own += 2;
+            } else if (answers.crowded === 'crowded' || answers.crowded === 'saturated') {
+                // If you're a leader in a crowded market, you should Own to defend
+                // If you're new/challenger in crowded market, Source makes sense
+                if (answers.position === 'leader' || answers.position === 'player') {
+                    scores.own += 1; // Still favor Own for established players
+                } else {
+                    scores.source += 2;
+                    scores.partner += 1;
+                }
+            }
+            
+            // Capability scoring - this is crucial
+            if (answers.capability === 'strong') {
+                scores.own += 4; // Increased - strong capability is a major Own signal
+            } else if (answers.capability === 'some') {
+                scores.joint += 2;
+                scores.partner += 2;
+            } else if (answers.capability === 'weak') {
+                scores.partner += 3;
+                scores.source += 2;
+                scores.own -= 1;
+            } else if (answers.capability === 'none') {
+                scores.partner += 3;
+                scores.source += 2;
+                scores.own -= 2;
+            }
+            
+            // IP Ownership scoring - critical reality check
+            if (answers.ip === 'own-all') {
+                scores.own += 3; // Clear path to Own
+            } else if (answers.ip === 'own-most') {
+                scores.own += 1; // Some flexibility but partner dependency
+                scores.joint += 1;
+            } else if (answers.ip === 'shared') {
+                scores.joint += 4; // Already in a JV, this is your reality
+                scores.own -= 2; // Can't truly Own without buying out partner
+            } else if (answers.ip === 'partner-owns') {
+                scores.partner += 3; // Dependent on their platform
+                scores.own -= 3; // Can't Own what they control
+            } else if (answers.ip === 'greenfield') {
+                // NPD where you want to develop IP - favor Own if you have capability
+                if (answers.capability === 'strong') {
+                    scores.own += 3; // Go build it
+                } else if (answers.capability === 'some') {
+                    scores.joint += 2; // Partner to fill gaps
+                    scores.own += 1;
+                } else {
+                    scores.joint += 2; // Need partner help
+                    scores.partner += 1;
+                }
+            } else if (answers.ip === 'none') {
+                scores.source += 1; // Commodity, no IP moat
+            }
+            
+            // Investment scoring
+            if (answers.investment === 'high') {
+                scores.own += 2;
+                scores.joint += 1;
+            } else if (answers.investment === 'minimal' || answers.investment === 'low') {
+                scores.source += 2;
+                scores.partner += 2;
+                scores.own -= 2;
+            }
+            
+            // Customization level scoring - critical for Partner vs Source distinction
+            if (answers.customization === 'branding') {
+                // Branding only = just fancy Source, not worth partner overhead
+                scores.source += 3;
+                scores.partner -= 2; // Don't overcomplicate with partner for cosmetic changes
+            } else if (answers.customization === 'design') {
+                // External design = true Partner & Adapt sweet spot
+                scores.partner += 3;
+                scores.source -= 1; // Can't get real design changes from Source
+            } else if (answers.customization === 'performance') {
+                // Performance tuning = advanced Partner or Joint Development
+                scores.partner += 2;
+                scores.joint += 2;
+                scores.source -= 2; // Source can't deliver performance customization
+            } else if (answers.customization === 'core-tech') {
+                // Core tech from scratch = Own or Joint Development
+                scores.joint += 3;
+                scores.own += 2;
+                scores.partner -= 2; // Partner & Adapt won't work if no existing platform fits
+            }
+            
+            // Find highest score
+            const maxScore = Math.max(scores.own, scores.joint, scores.partner, scores.source);
+            
+            // Return recommendation
+            if (scores.own === maxScore) return 'own';
+            if (scores.joint === maxScore) return 'joint';
+            if (scores.partner === maxScore) return 'partner';
+            return 'source';
+        }
+        
+        function showRecommendation() {
+            const approach = calculateRecommendation();
+            
+            // Save assessment to localStorage
+            const assessment = {
+                id: generateAssessmentId(),
+                timestamp: new Date().toISOString(),
+                category: categorySelect.options[categorySelect.selectedIndex].text,
+                categoryValue: answers.category,
+                approach: approach,
+                answers: {...answers},
+                challengeNotes: '' // Will be updated if they add notes
+            };
+            
+            saveAssessment(assessment);
+            clearProgress(); // Clear saved progress since assessment is complete
+            
+            // Hide questions, show recommendation
+            document.getElementById('q' + currentQuestion).classList.remove('active');
+            document.querySelector('.progress-bar').style.display = 'none';
+            document.querySelector('.button-group').style.display = 'none';
+            document.getElementById('recommendation').classList.add('active');
+            
+            // Populate recommendation based on approach
+            const recommendations = {
+                own: {
+                    title: 'Own & Build',
+                    subtitle: 'Maximum control, full ownership, long-term strategic play',
+                    productBenefit: 'Enables breakthrough innovation that redefines the category, creates new consumer habits, and owns the narrative completely.',
+                    rationale: `Based on your answers, this project warrants full ownership. You have ${answers.capability === 'strong' ? 'strong in-house capability' : 'the strategic importance'}, ${answers.intent === 'core-brand' ? 'core brand differentiation goals' : 'long-term strategic value'}, and ${answers.investment === 'high' ? 'appropriate investment appetite' : 'patient timeline'} that justify the higher investment and longer development cycle. This approach gives you maximum control over the product roadmap, IP ownership, and ability to defend your position.`,
+                    accepting: [
+                        'Maximum control over product roadmap and future iterations',
+                        'Full IP ownership - can prevent competitor copying',
+                        'Highest margin potential once at scale',
+                        'Manufacturing flexibility - can optimize suppliers over time'
+                    ],
+                    sacrificing: [
+                        '18-24 months to market (longest timeline)',
+                        '500K-2M+ upfront investment',
+                        'Highest risk if market doesn\'t materialize',
+                        'Opportunity cost - what else could resources build?'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Maximum' },
+                        { label: 'Timeline', value: '18-24 months' },
+                        { label: 'Investment', value: '500K-2M+' },
+                        { label: 'Risk', value: 'Highest' },
+                        { label: 'Margin Potential', value: 'Highest at scale' }
+                    ],
+                    implications: [
+                        { title: 'Full IP Ownership', content: 'You own all design, patents, and technical know-how. Can prevent competitors from copying and build lasting moats.' },
+                        { title: 'Product Roadmap Control', content: 'Complete freedom to iterate, improve, and extend the product line based on consumer feedback.' },
+                        { title: 'Manufacturing Flexibility', content: 'Can switch suppliers, negotiate better terms as you scale, and optimize for cost over time.' },
+                        { title: 'Higher Upfront Investment', content: 'Expect 500K-2M+ in tooling, R&D, compliance testing, and initial inventory. Budget accordingly.' }
+                    ],
+                    warnings: [
+                        { content: 'If volumes don\'t materialize, you\'re stuck with tooling costs and inventory risk. Make sure the market opportunity justifies the investment.' },
+                        { content: 'Timeline is typically 18-24 months from concept to launch. Ensure you have executive patience and that the category won\'t move without you.' }
+                    ],
+                    reconsider: 'If after 6-12 months your volumes are under 100K units/year, or if competitor innovation accelerates beyond your development pace, consider shifting to Partner & Adapt for faster iteration cycles.'
+                },
+                joint: {
+                    title: 'Joint Development',
+                    subtitle: 'Shared R&D from scratch - use sparingly',
+                    productBenefit: 'Combines our brand trust with partner\'s technical capability to deliver credible innovation we couldn\'t achieve alone.',
+                    rationale: `Your answers suggest ${answers.ip === 'shared' ? 'you already have shared IP ownership with a partner, which means Joint Development is your current reality. ' : ''}you need capabilities you don't have (${answers.capability}), but the project has enough strategic importance (${answers.intent}) to warrant co-creating rather than just adapting an existing solution. ${answers.ip === 'shared' ? 'Since your partner owns critical IP (e.g., heat system for Perfect Prep), you\'re committed to this joint approach unless you buy them out or redesign around their patents.' : 'However, be warned: Joint Development has the longest timelines due to coordination overhead and shared decision-making.'}`,
+                    accepting: [
+                        'Access to partner capabilities and IP you don\'t have',
+                        'Shared financial risk and investment',
+                        'Potentially stronger solution than either could build alone',
+                        'Shared ownership of resulting IP'
+                    ],
+                    sacrificing: [
+                        'Slowest approach - 18-24+ months due to coordination',
+                        'Shared margin forever (partner takes 15-25%)',
+                        'Shared control - need partner buy-in for major decisions',
+                        '20-30% overhead for governance and coordination'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Shared' },
+                        { label: 'Timeline', value: '18-24+ months' },
+                        { label: 'Investment', value: 'Shared (250K-1M)' },
+                        { label: 'Risk', value: 'Shared' },
+                        { label: 'Coordination', value: 'High complexity' }
+                    ],
+                    implications: [
+                        { title: 'Partner Governance Required', content: 'You\'ll need clear IP agreements, decision rights, exit clauses, and governance meetings. Budget 20-30% overhead for coordination.' },
+                        { title: 'Slowest Approach', content: 'Two sets of stakeholders, two sets of approvals, two sets of timelines. Add 6-12 months to what Own & Build would take.' },
+                        { title: 'Shared Margin Forever', content: 'Partner typically takes 15-25% of margin in perpetuity. Factor this into your business case.' },
+                        { title: 'Strategic Partnership Benefits', content: 'Access to capabilities and IP you don\'t have, shared risk, and potentially stronger solution than either could build alone.' }
+                    ],
+                    warnings: [
+                        { content: 'This is the SLOWEST approach due to coordination complexity. Only choose if the strategic value justifies the timeline and governance overhead.' },
+                        { content: 'Partner misalignment (different priorities, timelines, or risk appetite) can kill projects. Ensure strong relationship and aligned incentives before committing.' }
+                    ],
+                    reconsider: answers.ip === 'shared' ? 'If volumes justify it (>500K units/year) and margins are being squeezed by partner costs, evaluate buying out their IP to move to Own. Alternatively, if the relationship isn\'t working, consider redesigning around their patents (expensive but gives you freedom) or pivoting to Partner & Adapt with a different supplier.' : 'If coordination is taking longer than development, or if partner priorities shift, consider either: (1) buying them out to Own, or (2) pivoting to Partner & Adapt with a different supplier who has an existing platform.'
+                },
+                partner: {
+                    title: 'Partner & Adapt',
+                    subtitle: 'Customize existing solution - the sweet spot for many projects',
+                    productBenefit: 'Enables us to own the narrative and positioning in line with our brand language while delivering proven performance consumers trust.',
+                    rationale: `This is likely your best bet. You need ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'speed to market' : 'balanced speed and control'}, have ${answers.capability === 'weak' || answers.capability === 'none' ? 'limited in-house capability' : 'some capability but need help'}, and ${answers.intent === 'test-learn' ? 'want to validate the opportunity before full commitment' : 'want to enter the market efficiently'}. Partner & Adapt lets you customize an existing platform (design, branding, performance tuning) while the partner handles the heavy R&D lifting.`,
+                    accepting: [
+                        'Fast to market - 6-9 months from brief to launch',
+                        'Lower investment & risk (50K-200K)',
+                        'Partner absorbs most R&D cost and technical risk',
+                        'Proven technology - partner has done the core development'
+                    ],
+                    sacrificing: [
+                        'Limited control - constrained by partner\'s platform',
+                        'Reduced margin vs Source (partner takes 10-20%)',
+                        'Partner dependency for future improvements',
+                        'Can\'t make fundamental changes to core technology'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Limited' },
+                        { label: 'Timeline', value: '6-9 months' },
+                        { label: 'Investment', value: '50K-200K' },
+                        { label: 'Risk', value: 'Moderate' },
+                        { label: 'Flexibility', value: 'Within platform' }
+                    ],
+                    implications: [
+                        { title: 'Fast To Market', content: '6-9 months from brief to launch. Partner has done the core R&D, you\'re adapting their proven platform.' },
+                        { title: 'Lower Investment & Risk', content: 'Partner absorbs most R&D cost. You pay for customization (50K-200K typically) plus tooling for your branded parts.' },
+                        { title: 'Higher COGS Than Source', content: 'Partner charges for customization work (custom tooling, performance tuning, lower volumes). Expect COGS 20-40% higher than basic Source, reducing your margin by 10-15 percentage points. Trade-off: you get meaningful differentiation vs commodity products.' },
+                        { title: 'Validation Before Scale', content: 'Perfect for test & learn. If it works, you can always bring it in-house for v2. If it doesn\'t, you haven\'t blown the R&D budget.' }
+                    ],
+                    warnings: [
+                        { content: 'You\'re dependent on partner\'s platform roadmap. Major changes require their buy-in and may not align with your timeline.' },
+                        { content: 'Customization has limits - if you need completely different core technology, this won\'t work. Make sure partner platform is 70%+ fit for your needs.' }
+                    ],
+                    clarification: {
+                        title: 'What "Partner & Adapt" Actually Means',
+                        content: [
+                            { point: 'Partner has existing technology platform', detail: 'They have a working product (e.g., pump mechanism, heating system, bottle design) that you will adapt, not build from scratch.' },
+                            { point: 'You CAN customize', detail: 'External design (housing, shape, ergonomics), branding (colors, logos, finishes), control interface (buttons, displays), and minor performance tweaking (heating curves, suction patterns).' },
+                            { point: 'You typically CANNOT customize', detail: 'Core functionality, fundamental technology, or completely different mechanisms. If the partner\'s platform is <70% fit, this approach won\'t work.' },
+                            { point: 'Customization scope', detail: 'New external tooling for housing/buttons + branding + packaging + minor firmware adjustments. Investment: 50K-200K. Timeline: 6-9 months.' },
+                            { point: 'When this won\'t work', detail: 'If you need completely different core technology or no existing platform fits your needs, consider Joint Development (co-create with partner) or Own & Build (develop yourself).' }
+                        ]
+                    },
+                    reconsider: 'If volumes exceed 250K units/year and you have strong conviction in the long-term opportunity, build business case to Own for v2 to recapture margin and control.'
+                },
+                source: {
+                    title: 'Source & Specify',
+                    subtitle: 'Buy smart, move fast, optimize margin',
+                    productBenefit: 'Delivers price-competitive presence with immediate availability that addresses articulated consumer needs in line with market expectations now.',
+                    rationale: `The smart play here is to source finished goods. You ${answers.intent === 'tactical' ? 'need to fill a tactical gap' : answers.intent === 'market-share' ? 'want a piece of a big pie' : 'prioritize speed and low risk'}, ${answers.volume === 'very-high' || answers.volume === 'high' ? 'expect high volumes where Source economics are excellent' : 'have uncertain volumes'}, and ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'need speed' : 'want to minimize investment'}. Source & Specify is the fastest, lowest-risk approach that can deliver ${answers.volume === 'very-high' || answers.volume === 'high' ? 'excellent margins at scale' : 'decent margins with minimal capex'}.`,
+                    accepting: [
+                        'Fastest to market - 3-6 months from supplier to first container',
+                        'Lowest investment (20K-75K) and risk',
+                        'Proven products with established manufacturing',
+                        answers.volume === 'very-high' || answers.volume === 'high' ? 'Excellent margin potential at your volumes' : 'Manageable inventory risk'
+                    ],
+                    sacrificing: [
+                        'Minimal control - spec within supplier capabilities',
+                        'Limited differentiation (branding, colors, minor features only)',
+                        'No proprietary IP or defensible moat',
+                        'Limited influence over future product improvements'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Minimal' },
+                        { label: 'Timeline', value: '3-6 months' },
+                        { label: 'Investment', value: '20K-75K' },
+                        { label: 'Risk', value: 'Lowest' },
+                        { label: 'Differentiation', value: 'Limited' }
+                    ],
+                    implications: [
+                        { title: 'Fastest To Market', content: '3-6 months from finding supplier to first container. Products are proven and manufacturing is established.' },
+                        { title: 'Lowest Investment & Risk', content: 'No R&D, minimal tooling (just your branding/packaging). Inventory is your main risk, and that\'s manageable.' },
+                        { title: 'Margin Depends On Category', content: answers.volume === 'very-high' || answers.volume === 'high' ? 'At your expected volumes, Source can deliver excellent margins (low COGS from scale + TT brand premium at retail).' : 'Margins will be moderate - you have less negotiating power at lower volumes, but also less risk.' },
+                        { title: 'Limited Differentiation', content: 'You can customize colors, packaging, minor features - but core product is off the shelf. Sufficient for tactical plays or very crowded markets.' }
+                    ],
+                    warnings: [
+                        { content: answers.crowded === 'crowded' || answers.crowded === 'saturated' ? 'This market is crowded/commoditized, so margin pressure is real. Focus on supply chain efficiency and brand strength at retail.' : 'Make sure you\'re not sourcing something competitors can easily copy. If brand differentiation matters, consider Partner & Adapt instead.' },
+                        { content: 'You have limited control over future product improvements. If category becomes strategic, plan transition to Own or Partner & Adapt.' }
+                    ],
+                    reconsider: 'If this category becomes more strategic (consumers demand TT innovation, not just presence), or if volumes justify the investment, consider moving to Partner & Adapt or Own for v2.'
+                }
+            };
+            
+            const rec = recommendations[approach];
+            
+            document.getElementById('approachTitle').textContent = rec.title;
+            document.getElementById('approachSubtitle').textContent = rec.subtitle;
+            
+            // Add product benefit if it exists
+            const headerElement = document.querySelector('.recommendation-header');
+            if (rec.productBenefit && headerElement) {
+                const benefitHtml = `
+                    <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-top: 20px;">
+                        <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 6px;">Product Benefit</div>
+                        <div style="font-size: 16px; line-height: 1.5;">${rec.productBenefit}</div>
+                    </div>
+                `;
+                headerElement.insertAdjacentHTML('beforeend', benefitHtml);
+            }
+            
+            document.getElementById('rationale').textContent = rec.rationale;
+            
+            // Create summary section for screenshots/scoping docs
+            const summaryHtml = `
+                <div class="recommendation-summary">
+                    <div class="summary-header">
+                        <div class="summary-title-section">
+                            <h3>${rec.title}</h3>
+                            <p>${rec.subtitle}</p>
+                        </div>
+                        <div class="summary-meta">
+                            <div><strong>Sub-category:</strong> ${categorySelect.options[categorySelect.selectedIndex].text}</div>
+                            <div><strong>Date:</strong> ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                        </div>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-section">
+                            <h4>What You're Accepting ✓</h4>
+                            <ul>
+                                ${rec.accepting.map(item => `<li class="accepting-item">${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="summary-section">
+                            <h4>What You're Sacrificing ✗</h4>
+                            <ul>
+                                ${rec.sacrificing.map(item => `<li class="sacrificing-item">${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="summary-footer">
+                        This recommendation should be referenced in scoping documents and remain consistent through business case approval.<br>
+                        Changes require re-assessment with updated criteria.
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <label for="challengeNotes" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">
+                            Notes / Challenge (Optional)
+                        </label>
+                        <textarea 
+                            id="challengeNotes" 
+                            placeholder="If you disagree with this recommendation or have additional context, note it here. This will be included when you screenshot this summary."
+                            style="width: 100%; min-height: 80px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"
+                        ></textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                            <div style="font-size: 13px; color: #718096;">
+                                Example: "Recommend Partner & Adapt over Source due to need for custom suction patterns not available off-shelf"
+                            </div>
+                            <button id="saveNotesBtn" class="btn-primary" style="width: auto; padding: 10px 24px; font-size: 14px;" onclick="saveNotes()">
+                                Save Notes
+                            </button>
+                        </div>
+                        <div id="saveConfirmation" style="display: none; margin-top: 8px; padding: 8px 12px; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                            ✓ Notes saved successfully
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Insert summary before other sections
+            const recommendationDiv = document.getElementById('recommendation');
+            const firstSection = recommendationDiv.querySelector('.section');
+            
+            // Add screenshot button before summary
+            const screenshotBtnHtml = `
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <button class="btn-primary" id="screenshotBtn" onclick="downloadScreenshot()" style="width: auto; padding: 12px 24px; font-size: 15px;">
+                        Download Screenshot
+                    </button>
+                    <span id="screenshotLoading" style="display: none; margin-left: 10px; color: #667eea; font-size: 14px;">Generating...</span>
+                </div>
+            `;
+            firstSection.insertAdjacentHTML('beforebegin', screenshotBtnHtml);
+            firstSection.insertAdjacentHTML('beforebegin', summaryHtml);
+            
+            // Check if delay warning is needed
+            const needsDelayWarning = (
+                (approach === 'own' || approach === 'joint') && 
+                (answers.timeline === 'urgent' || answers.timeline === 'fast') &&
+                (answers.crowded === 'crowded' || answers.crowded === 'saturated')
+            );
+            
+            if (needsDelayWarning) {
+                const delayWarningHtml = `
+                    <div class="delay-warning-box">
+                        <h4><span style="font-size: 20px; margin-right: 8px;">▲</span>Cost of Delay Warning</h4>
+                        <p><strong>Your answers indicate a tension between your chosen approach and market realities:</strong></p>
+                        <ul>
+                            <li>You need speed (${answers.timeline === 'urgent' ? '<6 months' : '6-9 months'})</li>
+                            <li>Market is ${answers.crowded === 'crowded' ? 'crowded' : 'highly saturated'} with active competition</li>
+                            <li>But ${approach === 'own' ? 'Own & Build' : 'Joint Development'} takes 18-24+ months</li>
+                        </ul>
+                        <p><strong>Consider the cost:</strong> In the 12-18 months it takes you to launch, competitors with "good enough" solutions may:</p>
+                        <ul>
+                            <li>Capture first-mover advantage and retail shelf space</li>
+                            <li>Build consumer awareness and preference</li>
+                            <li>Sell 200K-500K units = 2-5M+ revenue head start</li>
+                        </ul>
+                        <p style="margin-top: 12px;"><strong>Question to ask:</strong> Is perfect differentiation in 18 months better than 75% differentiation in 6 months? Or will the market have moved on without you?</p>
+                    </div>
+                `;
+                firstSection.insertAdjacentHTML('beforebegin', delayWarningHtml);
+            }
+            
+            // Tradeoffs
+            const tradeoffsHtml = rec.tradeoffs.map(t => 
+                `<div class="tradeoff-item">
+                    <div class="tradeoff-label">${t.label}</div>
+                    <div class="tradeoff-value">${t.value}</div>
+                </div>`
+            ).join('');
+            document.getElementById('tradeoffs').innerHTML = tradeoffsHtml;
+            
+            // Implications
+            const implicationsHtml = rec.implications.map(i =>
+                `<div class="card">
+                    <div class="card-title">${i.title}</div>
+                    <div class="card-content">${i.content}</div>
+                </div>`
+            ).join('');
+            document.getElementById('implications').innerHTML = implicationsHtml;
+            
+            // Warnings
+            const warningsHtml = rec.warnings.map(w =>
+                `<div class="warning-box">
+                    <strong>Warning:</strong> ${w.content}
+                </div>`
+            ).join('');
+            document.getElementById('warnings').innerHTML = warningsHtml;
+            
+            // Clarification section (only for Partner & Adapt)
+            const clarificationSection = document.getElementById('clarificationSection');
+            if (rec.clarification) {
+                clarificationSection.style.display = 'block';
+                document.getElementById('clarificationTitle').textContent = rec.clarification.title;
+                const clarificationHtml = rec.clarification.content.map(item =>
+                    `<div class="card">
+                        <div class="card-title">${item.point}</div>
+                        <div class="card-content">${item.detail}</div>
+                    </div>`
+                ).join('');
+                document.getElementById('clarification').innerHTML = clarificationHtml;
+            } else {
+                clarificationSection.style.display = 'none';
+            }
+            
+            // Reconsider
+            document.getElementById('reconsider').textContent = rec.reconsider;
+            
+            // Add event listener for challenge notes
+            setTimeout(() => {
+                const notesTextarea = document.getElementById('challengeNotes');
+                if (notesTextarea) {
+                    notesTextarea.addEventListener('input', (e) => {
+                        updateAssessmentNotes(e.target.value);
+                    });
+                }
+            }, 100);
+        }
+        
+        function restart() {
+            // Clear saved progress
+            clearProgress();
+            
+            // Reset everything
+            currentQuestion = 1;
+            Object.keys(answers).forEach(key => delete answers[key]);
+            
+            // Reset all selects
+            [categorySelect, intentSelect, volumeSelect, timelineSelect, 
+             positionSelect, crowdedSelect, capabilitySelect, ipSelect, investmentSelect].forEach(select => {
+                select.value = '';
+            });
+            
+            // Remove dynamically added summary, warnings, and screenshot elements
+            const summaryElements = document.querySelectorAll('.recommendation-summary, .delay-warning-box');
+            summaryElements.forEach(el => el.remove());
+            
+            const screenshotBtn = document.getElementById('screenshotBtn');
+            if (screenshotBtn && screenshotBtn.parentElement) {
+                screenshotBtn.parentElement.remove();
+            }
+            
+            // Reset container width
+            const container = document.querySelector('.container');
+            container.style.maxWidth = '800px';
+            
+            // Reset UI
+            document.getElementById('recommendation').classList.remove('active');
+            document.getElementById('assessmentContent').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'block';
+            document.getElementById('q1').classList.add('active');
+            document.querySelector('.progress-bar').style.display = 'block';
+            document.querySelector('.button-group').style.display = 'flex';
+            
+            updateProgress();
+            updateNavigation();
+            nextBtn.disabled = true;
+        }
+        
+        // Initialize
+        updateProgress();
+        
+        // Assessment storage functions
+        function generateAssessmentId() {
+            return 'ASS-' + Date.now().toString(36).toUpperCase();
+        }
+        
+        function saveAssessment(assessment) {
+            const assessments = getAssessments();
+            assessments.push(assessment);
+            localStorage.setItem('mayborn_assessments', JSON.stringify(assessments));
+            
+            // Store current assessment ID for updating notes
+            localStorage.setItem('current_assessment_id', assessment.id);
+        }
+        
+        function getAssessments() {
+            const stored = localStorage.getItem('mayborn_assessments');
+            return stored ? JSON.parse(stored) : [];
+        }
+        
+        function updateAssessmentNotes(notes) {
+            const currentId = localStorage.getItem('current_assessment_id');
+            if (!currentId) return;
+            
+            const assessments = getAssessments();
+            const assessment = assessments.find(a => a.id === currentId);
+            if (assessment) {
+                assessment.challengeNotes = notes;
+                localStorage.setItem('mayborn_assessments', JSON.stringify(assessments));
+            }
+        }
+        
+        function deleteAssessment(assessmentId) {
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete assessment ${assessmentId}? This cannot be undone.`)) {
+                return;
+            }
+            
+            // Get assessments and filter out the one to delete
+            const assessments = getAssessments();
+            const filteredAssessments = assessments.filter(a => a.id !== assessmentId);
+            
+            // Save back to localStorage
+            localStorage.setItem('mayborn_assessments', JSON.stringify(filteredAssessments));
+            
+            // Refresh the admin view (without password prompt)
+            renderAdminView();
+        }
+        
+        function showAdminView() {
+            const password = prompt('Enter admin password:');
+            if (password !== '54325') {
+                if (password !== null) { // Only alert if they didn't cancel
+                    alert('Incorrect password');
+                }
+                return;
+            }
+            
+            renderAdminView();
+        }
+        
+        function renderAdminView() {
+            document.getElementById('assessmentContent').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('recommendation').classList.remove('active');
+            document.getElementById('adminView').style.display = 'block';
+            
+            const assessments = getAssessments();
+            const tbody = document.getElementById('adminTableBody');
+            
+            if (assessments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #718096;">No assessments completed yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = assessments.reverse().map(a => {
+                const date = new Date(a.timestamp);
+                const approaches = {
+                    own: 'Own & Build',
+                    joint: 'Joint Development',
+                    partner: 'Partner & Adapt',
+                    source: 'Source & Specify'
+                };
+                
+                return `
+                    <tr>
+                        <td>${a.id}</td>
+                        <td>${date.toLocaleDateString('en-GB')} ${date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}</td>
+                        <td>${a.category}</td>
+                        <td><span class="approach-badge approach-${a.approach}">${approaches[a.approach]}</span></td>
+                        <td style="max-width: 300px; font-size: 13px; color: #4a5568;">${a.challengeNotes || '<em style="color: #a0aec0;">None</em>'}</td>
+                        <td>
+                            <button class="btn-view-details" onclick='viewAssessmentDetails(${JSON.stringify(a)})'>View</button>
+                            <button class="btn-view-details" onclick='deleteAssessment("${a.id}")' style="background: #fc8181; margin-left: 8px;">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function hideAdminView() {
+            document.getElementById('adminView').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'block';
+        }
+        
+        function viewAssessmentDetails(assessment) {
+            const modal = document.getElementById('assessmentModal');
+            const details = document.getElementById('assessmentDetails');
+            
+            const answerLabels = {
+                intent: 'Strategic Goal',
+                volume: 'Volume Expectation',
+                timeline: 'Timeline',
+                position: 'Market Position',
+                crowded: 'Market Crowdedness',
+                capability: 'Internal Capability',
+                ip: 'IP Ownership',
+                investment: 'Investment Appetite'
+            };
+            
+            const detailsHtml = `
+                <h3 style="margin-bottom: 20px; color: #2d3748;">Assessment ${assessment.id}</h3>
+                <div style="background: #f7fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>Date:</strong> ${new Date(assessment.timestamp).toLocaleString('en-GB')}<br>
+                    <strong>Category:</strong> ${assessment.category}<br>
+                    <strong>Recommendation:</strong> <span class="approach-badge approach-${assessment.approach}">${assessment.approach === 'own' ? 'Own & Build' : assessment.approach === 'joint' ? 'Joint Development' : assessment.approach === 'partner' ? 'Partner & Adapt' : 'Source & Specify'}</span>
+                </div>
+                <h4 style="margin-bottom: 12px; color: #2d3748;">Assessment Inputs:</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    ${Object.entries(assessment.answers).filter(([key]) => key !== 'category').map(([key, value]) => `
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 12px 8px; font-weight: 600; color: #4a5568; width: 40%;">${answerLabels[key] || key}</td>
+                            <td style="padding: 12px 8px; color: #2d3748;">${value}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+                ${assessment.challengeNotes ? `
+                    <h4 style="margin: 20px 0 12px; color: #2d3748;">Challenge Notes:</h4>
+                    <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px;">
+                        ${assessment.challengeNotes}
+                    </div>
+                ` : ''}
+            `;
+            
+            details.innerHTML = detailsHtml;
+            modal.style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('assessmentModal').style.display = 'none';
+        }
+        
+        function exportAssessmentsCSV() {
+            const assessments = getAssessments();
+            if (assessments.length === 0) {
+                alert('No assessments to export');
+                return;
+            }
+            
+            const approaches = {
+                own: 'Own & Build',
+                joint: 'Joint Development',
+                partner: 'Partner & Adapt',
+                source: 'Source & Specify'
+            };
+            
+            // CSV headers
+            let csv = 'Assessment ID,Date,Time,Sub-category,Recommendation,Strategic Goal,Volume,Timeline,Position,Crowdedness,Capability,IP Ownership,Investment,Challenge Notes\n';
+            
+            // CSV rows
+            assessments.forEach(a => {
+                const date = new Date(a.timestamp);
+                const dateStr = date.toLocaleDateString('en-GB');
+                const timeStr = date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
+                
+                csv += `"${a.id}","${dateStr}","${timeStr}","${a.category}","${approaches[a.approach]}",`;
+                csv += `"${a.answers.intent || ''}","${a.answers.volume || ''}","${a.answers.timeline || ''}",`;
+                csv += `"${a.answers.position || ''}","${a.answers.crowded || ''}","${a.answers.capability || ''}",`;
+                csv += `"${a.answers.ip || ''}","${a.answers.investment || ''}","${(a.challengeNotes || '').replace(/"/g, '""')}"\n`;
+            });
+            
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mayborn_assessments_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function saveNotes() {
+            const notesTextarea = document.getElementById('challengeNotes');
+            const notes = notesTextarea ? notesTextarea.value : '';
+            updateAssessmentNotes(notes);
+            
+            // Show confirmation
+            const confirmation = document.getElementById('saveConfirmation');
+            confirmation.style.display = 'block';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                confirmation.style.display = 'none';
+            }, 3000);
+        }
+        
+        function downloadScreenshot() {
+            const btn = document.getElementById('screenshotBtn');
+            const loading = document.getElementById('screenshotLoading');
+            
+            btn.disabled = true;
+            loading.style.display = 'inline';
+            
+            // Get current recommendation data
+            const approach = calculateRecommendation();
+            const rec = getRecommendationData(approach);
+            const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+            const dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            const notes = document.getElementById('challengeNotes')?.value || '';
+            
+            // Create hidden screenshot container
+            const container = document.createElement('div');
+            container.className = 'screenshot-container';
+            container.innerHTML = `
+                <div class="screenshot-page" style="width: 1600px;">
+                    <!-- Summary Page - Landscape Layout -->
+                    <div class="screenshot-summary">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;">
+                            <div>
+                                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 6px;">${rec.title}</h2>
+                                <p style="font-size: 14px; color: #718096; margin-bottom: 12px;">${rec.subtitle}</p>
+                                ${rec.productBenefit ? `
+                                    <div style="background: #f7fafc; padding: 12px; border-radius: 6px; border-left: 4px solid #667eea;">
+                                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #667eea; margin-bottom: 4px;">Product Benefit</div>
+                                        <div style="font-size: 13px; line-height: 1.5; color: #2d3748;">${rec.productBenefit}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="text-align: right; font-size: 13px; color: #718096; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                                <div><strong>Sub-category:</strong> ${categoryText}</div>
+                                <div><strong>Date:</strong> ${dateText}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                            <div>
+                                <h4 style="font-size: 14px; color: #2d3748; margin-bottom: 10px; font-weight: 700;">What You're Accepting ✓</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    ${rec.accepting.map(item => `<li style="padding: 6px 0; color: #38a169; font-size: 12px; line-height: 1.4;"><span style="font-weight: bold;">✓</span> ${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 14px; color: #2d3748; margin-bottom: 10px; font-weight: 700;">What You're Sacrificing ✗</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    ${rec.sacrificing.map(item => `<li style="padding: 6px 0; color: #e53e3e; font-size: 12px; line-height: 1.4;"><span style="font-weight: bold;">✗</span> ${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        ${notes ? `
+                            <div style="margin-top: 15px; background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 4px;">
+                                <strong style="color: #92400e; font-size: 12px;">Notes / Challenge:</strong>
+                                <p style="color: #78350f; margin-top: 6px; font-size: 12px; line-height: 1.5;">${notes}</p>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Rationale and Trade-offs in same row -->
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px;">
+                            <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                                <h4 style="font-size: 13px; color: #2d3748; margin-bottom: 8px; font-weight: 700;">Why This Approach?</h4>
+                                <p style="font-size: 11px; line-height: 1.5; color: #4a5568;">${rec.rationale}</p>
+                            </div>
+                            <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                                <h4 style="font-size: 13px; color: #2d3748; margin-bottom: 8px; font-weight: 700;">Key Trade-Offs</h4>
+                                ${rec.tradeoffs.map(t => `<p style="font-size: 11px; line-height: 1.5; margin-bottom: 4px;"><strong>${t.label}:</strong> ${t.value}</p>`).join('')}
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f7fafc; padding: 12px; border-radius: 6px; margin-top: 15px; text-align: center; font-size: 10px; color: #718096;">
+                            This recommendation should be referenced in scoping documents and remain consistent through business case approval. Changes require re-assessment with updated criteria.
+                        </div>
+                    </div>
+                    
+                    <!-- Page 2: Detailed Implementation -->
+                    <div style="margin-top: 30px; width: 1600px;">
+                        <h3 style="font-size: 20px; color: #2d3748; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+                            Detailed Implementation & Considerations
+                        </h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
+                            ${rec.implications.map(impl => `
+                                <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                                    <h4 style="font-size: 12px; color: #2d3748; margin-bottom: 6px; font-weight: 700;">${impl.title}</h4>
+                                    <p style="font-size: 11px; line-height: 1.5; color: #4a5568;">${impl.content}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="background: #fff5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #fc8181;">
+                                <h4 style="font-size: 12px; color: #2d3748; margin-bottom: 8px; font-weight: 700;">Watch Out For</h4>
+                                <ul style="margin: 0; padding-left: 16px;">
+                                    ${rec.warnings.map(w => `<li style="font-size: 11px; line-height: 1.5; color: #4a5568; margin-bottom: 4px;">${w.content}</li>`).join('')}
+                                </ul>
+                            </div>
+                            
+                            <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <h4 style="font-size: 12px; color: #2d3748; margin-bottom: 8px; font-weight: 700;">When To Reconsider</h4>
+                                <p style="font-size: 11px; line-height: 1.5; color: #4a5568;">${rec.reconsider}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(container);
+            
+            // Use html2canvas to capture
+            html2canvas(container, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: 1600,
+                windowWidth: 1600
+            }).then(canvas => {
+                // Convert to blob and download
+                canvas.toBlob(blob => {
+                    if (!blob) {
+                        throw new Error('Failed to create image blob');
+                    }
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sourcing_strategy_${categoryText.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    // Cleanup
+                    document.body.removeChild(container);
+                    btn.disabled = false;
+                    loading.style.display = 'none';
+                }, 'image/png');
+            }).catch(err => {
+                console.error('Screenshot failed:', err);
+                alert('Screenshot failed. Please try using your device screenshot tool instead.');
+                document.body.removeChild(container);
+                btn.disabled = false;
+                loading.style.display = 'none';
+            });
+        }
+        
+        function getRecommendationData(approach) {
+            // This is a copy of the recommendations object from showRecommendation
+            // We need it accessible for the screenshot function
+            const recommendations = {
+                own: {
+                    title: 'Own & Build',
+                    subtitle: 'Maximum control, full ownership, long-term strategic play',
+                    productBenefit: 'Enables breakthrough innovation that redefines the category, creates new consumer habits, and owns the narrative completely.',
+                    rationale: `Based on your answers, this project warrants full ownership. You have ${answers.capability === 'strong' ? 'strong in-house capability' : 'the strategic importance'}, ${answers.intent === 'core-brand' ? 'core brand differentiation goals' : 'long-term strategic value'}, and ${answers.investment === 'high' ? 'appropriate investment appetite' : 'patient timeline'} that justify the higher investment and longer development cycle.`,
+                    accepting: [
+                        'Maximum control over product roadmap and future iterations',
+                        'Full IP ownership - can prevent competitor copying',
+                        'Highest margin potential once at scale',
+                        'Manufacturing flexibility - can optimize suppliers over time'
+                    ],
+                    sacrificing: [
+                        '18-24 months to market (longest timeline)',
+                        '500K-2M+ upfront investment',
+                        'Highest risk if market doesn\'t materialize',
+                        'Opportunity cost - what else could resources build?'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Maximum' },
+                        { label: 'Timeline', value: '18-24 months' },
+                        { label: 'Investment', value: '500K-2M+' },
+                        { label: 'Risk', value: 'Highest' }
+                    ],
+                    implications: [
+                        { title: 'Full IP Ownership', content: 'You own all design, patents, and technical know-how. Can prevent competitors from copying.' },
+                        { title: 'Product Roadmap Control', content: 'Complete freedom to iterate, improve, and extend the product line.' },
+                        { title: 'Manufacturing Flexibility', content: 'Can switch suppliers and optimize for cost over time.' },
+                        { title: 'Higher Upfront Investment', content: 'Expect 500K-2M+ in tooling, R&D, compliance testing, and initial inventory.' }
+                    ],
+                    warnings: [
+                        { content: 'If volumes don\'t materialize, you\'re stuck with tooling costs and inventory risk.' },
+                        { content: 'Timeline is typically 18-24 months from concept to launch.' }
+                    ],
+                    reconsider: 'If volumes are under 100K units/year after 6-12 months, or if competitor innovation accelerates, consider Partner & Adapt.'
+                },
+                joint: {
+                    title: 'Joint Development',
+                    subtitle: 'Shared R&D from scratch - use sparingly',
+                    productBenefit: 'Combines our brand trust with partner\'s technical capability to deliver credible innovation we couldn\'t achieve alone.',
+                    rationale: `${answers.ip === 'shared' ? 'You already have shared IP ownership with a partner. ' : ''}You need capabilities you don't have, but this project has strategic importance warranting co-creation rather than adaptation.`,
+                    accepting: [
+                        'Access to partner capabilities and IP you don\'t have',
+                        'Shared financial risk and investment',
+                        'Potentially stronger solution than either could build alone',
+                        'Shared ownership of resulting IP'
+                    ],
+                    sacrificing: [
+                        'Slowest approach - 18-24+ months due to coordination',
+                        'Shared margin forever (partner takes 15-25%)',
+                        'Shared control - need partner buy-in for decisions',
+                        '20-30% overhead for governance and coordination'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Shared' },
+                        { label: 'Timeline', value: '18-24+ months' },
+                        { label: 'Investment', value: 'Shared (250K-1M)' },
+                        { label: 'Coordination', value: 'High complexity' }
+                    ],
+                    implications: [
+                        { title: 'Partner Governance Required', content: 'Need clear IP agreements, decision rights, exit clauses. Budget 20-30% overhead.' },
+                        { title: 'Slowest Approach', content: 'Two sets of stakeholders and approvals. Add 6-12 months to Own timeline.' },
+                        { title: 'Shared Margin Forever', content: 'Partner typically takes 15-25% of margin in perpetuity.' },
+                        { title: 'Strategic Partnership Benefits', content: 'Access to capabilities you don\'t have with shared risk.' }
+                    ],
+                    warnings: [
+                        { content: 'This is the SLOWEST approach due to coordination complexity.' },
+                        { content: 'Partner misalignment can kill projects. Ensure aligned incentives.' }
+                    ],
+                    reconsider: answers.ip === 'shared' ? 'If volumes exceed 500K units/year, evaluate buying out their IP to move to Own.' : 'If coordination takes longer than development, consider buying them out or pivoting to Partner & Adapt.'
+                },
+                partner: {
+                    title: 'Partner & Adapt',
+                    subtitle: 'Customize existing solution - the sweet spot',
+                    productBenefit: 'Enables us to own the narrative and positioning in line with our brand language while delivering proven performance consumers trust.',
+                    rationale: `You need ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'speed to market' : 'balanced speed'}, have ${answers.capability === 'weak' || answers.capability === 'none' ? 'limited capability' : 'some capability'}, and ${answers.intent === 'test-learn' ? 'want to validate before commitment' : 'want efficient market entry'}.`,
+                    accepting: [
+                        'Fast to market - 6-9 months from brief to launch',
+                        'Lower investment & risk (50K-200K)',
+                        'Partner absorbs most R&D cost and technical risk',
+                        'Proven technology - partner has done core development'
+                    ],
+                    sacrificing: [
+                        'Limited control - constrained by partner\'s platform',
+                        'Reduced margin vs Source (partner takes 10-20%)',
+                        'Partner dependency for future improvements',
+                        'Can\'t make fundamental changes to core technology'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Limited' },
+                        { label: 'Timeline', value: '6-9 months' },
+                        { label: 'Investment', value: '50K-200K' },
+                        { label: 'Flexibility', value: 'Within platform' }
+                    ],
+                    implications: [
+                        { title: 'Fast To Market', content: '6-9 months from brief to launch. Partner has done core R&D.' },
+                        { title: 'Lower Investment & Risk', content: 'Partner absorbs most R&D cost. You pay 50K-200K for customization.' },
+                        { title: 'Higher COGS Than Source', content: 'Partner charges for customization work. COGS 20-40% higher than basic Source, reducing margin by 10-15 percentage points. Trade-off: meaningful differentiation vs commodity.' },
+                        { title: 'Validation Before Scale', content: 'Perfect for test & learn. Can bring in-house for v2 if successful.' }
+                    ],
+                    warnings: [
+                        { content: 'You\'re dependent on partner\'s platform roadmap.' },
+                        { content: 'Customization has limits - platform must be 70%+ fit for your needs.' }
+                    ],
+                    clarification: {
+                        title: 'What "Partner & Adapt" Actually Means',
+                        content: [
+                            { point: 'Partner has existing technology platform', detail: 'They have a working product (e.g., pump mechanism, heating system, bottle design) that you will adapt, not build from scratch.' },
+                            { point: 'You CAN customize', detail: 'External design (housing, shape, ergonomics), branding (colors, logos, finishes), control interface (buttons, displays), and minor performance tweaking (heating curves, suction patterns).' },
+                            { point: 'You typically CANNOT customize', detail: 'Core functionality, fundamental technology, or completely different mechanisms. If the partner\'s platform is <70% fit, this approach won\'t work.' },
+                            { point: 'Customization scope', detail: 'New external tooling for housing/buttons + branding + packaging + minor firmware adjustments. Investment: 50K-200K. Timeline: 6-9 months.' },
+                            { point: 'When this won\'t work', detail: 'If you need completely different core technology or no existing platform fits your needs, consider Joint Development (co-create with partner) or Own & Build (develop yourself).' }
+                        ]
+                    },
+                    reconsider: 'If volumes exceed 250K units/year with strong conviction, build business case to Own for v2.'
+                },
+                source: {
+                    title: 'Source & Specify',
+                    subtitle: 'Buy smart, move fast, optimize margin',
+                    productBenefit: 'Delivers price-competitive presence with immediate availability that addresses articulated consumer needs in line with market expectations now.',
+                    rationale: `You ${answers.intent === 'tactical' ? 'need to fill tactical gap' : answers.intent === 'market-share' ? 'want market share' : 'prioritize speed and low risk'}, ${answers.volume === 'very-high' || answers.volume === 'high' ? 'expect high volumes' : 'have uncertain volumes'}, and ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'need speed' : 'want to minimize investment'}.`,
+                    accepting: [
+                        'Fastest to market - 3-6 months from supplier to first container',
+                        'Lowest investment (20K-75K) and risk',
+                        'Proven products with established manufacturing',
+                        answers.volume === 'very-high' || answers.volume === 'high' ? 'Excellent margin potential at your volumes' : 'Manageable inventory risk'
+                    ],
+                    sacrificing: [
+                        'Minimal control - spec within supplier capabilities',
+                        'Limited differentiation (branding, colors, minor features)',
+                        'No proprietary IP or defensible moat',
+                        'Limited influence over future improvements'
+                    ],
+                    tradeoffs: [
+                        { label: 'Control', value: 'Minimal' },
+                        { label: 'Timeline', value: '3-6 months' },
+                        { label: 'Investment', value: '20K-75K' },
+                        { label: 'Differentiation', value: 'Limited' }
+                    ],
+                    implications: [
+                        { title: 'Fastest To Market', content: '3-6 months from finding supplier to first container.' },
+                        { title: 'Lowest Investment', content: 'No R&D, minimal tooling. Inventory is your main risk.' },
+                        { title: 'Margin Depends On Volume', content: answers.volume === 'very-high' || answers.volume === 'high' ? 'At your volumes, excellent margins from scale + brand premium.' : 'Moderate margins with less negotiating power but also less risk.' },
+                        { title: 'Limited Differentiation', content: 'Can customize colors, packaging, minor features. Core product is off-shelf.' }
+                    ],
+                    warnings: [
+                        { content: answers.crowded === 'crowded' || answers.crowded === 'saturated' ? 'Crowded market means margin pressure. Focus on supply chain efficiency.' : 'Ensure competitors can\'t easily copy. Consider Partner & Adapt if differentiation matters.' },
+                        { content: 'Limited control over future improvements. Plan transition if category becomes strategic.' }
+                    ],
+                    reconsider: 'If category becomes strategic or volumes justify investment, consider Partner & Adapt or Own for v2.'
+                }
+            };
+            
+            return recommendations[approach];
+        }
+        
+        function enterScreenshotMode() {
+            // Deprecated - replaced by downloadScreenshot
+            downloadScreenshot();
+        }
+        
+        function exitScreenshotMode() {
+            // Deprecated - no longer needed
+        }
+    </script>
+</body>
+</html>
