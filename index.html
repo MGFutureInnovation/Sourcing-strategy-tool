@@ -636,7 +636,7 @@
     <div class="container">
         <h1>Innovation Sourcing Strategy Tool</h1>
         <p class="subtitle">Answer a few questions to find the right approach for your project</p>
-        <div class="version-footer">v1.3 | November 2025 | Email Notifications</div>
+        <div class="version-footer">v1.3.1 | November 2025 | Centered Screenshots</div>
         <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
         
         <!-- Welcome Screen -->
@@ -2015,63 +2015,63 @@
             const container = document.createElement('div');
             container.className = 'screenshot-container';
             container.innerHTML = `
-                <div style="width: 1920px; height: 1080px; background: white; padding: 40px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <div style="width: 1920px; height: 1080px; background: white; padding: 35px 50px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column;">
                     <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px solid #667eea;">
-                        <div style="flex: 1;">
-                            <h1 style="font-size: 36px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700;">Sourcing Strategy: ${rec.title}</h1>
-                            <p style="font-size: 18px; color: #718096; margin: 0;">${rec.subtitle}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; padding-bottom: 15px; border-bottom: 3px solid #667eea;">
+                        <div style="flex: 1; max-width: 65%;">
+                            <h1 style="font-size: 36px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ${rec.title}</h1>
+                            <p style="font-size: 18px; color: #718096; margin: 0; line-height: 1.3;">${rec.subtitle}</p>
                         </div>
-                        <div style="text-align: right; font-size: 16px; color: #4a5568; min-width: 300px;">
+                        <div style="text-align: right; font-size: 16px; color: #4a5568; flex-shrink: 0;">
                             <div style="margin-bottom: 4px;"><strong>Category:</strong> ${categoryText}</div>
-                            <div style="margin-bottom: 4px;"><strong>Date:</strong> ${dateText}</div>
-                            <div style="padding: 6px 12px; background: #667eea; color: white; border-radius: 6px; display: inline-block; margin-top: 8px; font-weight: 600;">${rec.title}</div>
+                            <div style="margin-bottom: 8px;"><strong>Date:</strong> ${dateText}</div>
+                            <div style="padding: 6px 16px; background: #667eea; color: white; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px;">${rec.title}</div>
                         </div>
                     </div>
                     
                     <!-- Main Content Grid -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 18px; flex: 0 0 auto;">
                         <!-- Left Column: Accepting -->
                         <div>
                             <h3 style="font-size: 20px; color: #2d3748; margin: 0 0 12px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #38a169; margin-right: 8px;">✓</span> What You're Accepting
+                                <span style="color: #38a169; margin-right: 8px; font-size: 24px;">✓</span> What You're Accepting
                             </h3>
                             <ul style="list-style: none; padding: 0; margin: 0;">
-                                ${rec.accepting.map(item => `<li style="padding: 8px 0; color: #2d3748; font-size: 15px; line-height: 1.5; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 6px;">✓</span>${item}</li>`).join('')}
+                                ${rec.accepting.map(item => `<li style="padding: 8px 0; color: #2d3748; font-size: 15px; line-height: 1.5; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 8px;">✓</span>${item}</li>`).join('')}
                             </ul>
                         </div>
                         
                         <!-- Right Column: Sacrificing -->
                         <div>
                             <h3 style="font-size: 20px; color: #2d3748; margin: 0 0 12px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #e53e3e; margin-right: 8px;">✗</span> What You're Sacrificing
+                                <span style="color: #e53e3e; margin-right: 8px; font-size: 24px;">✗</span> What You're Sacrificing
                             </h3>
                             <ul style="list-style: none; padding: 0; margin: 0;">
-                                ${rec.sacrificing.map(item => `<li style="padding: 8px 0; color: #2d3748; font-size: 15px; line-height: 1.5; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 6px;">✗</span>${item}</li>`).join('')}
+                                ${rec.sacrificing.map(item => `<li style="padding: 8px 0; color: #2d3748; font-size: 15px; line-height: 1.5; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 8px;">✗</span>${item}</li>`).join('')}
                             </ul>
                         </div>
                     </div>
                     
                     <!-- Key Trade-Offs Row -->
-                    <div style="background: #f7fafc; padding: 20px; border-radius: 8px; border-left: 6px solid #667eea; margin-bottom: 20px;">
-                        <h4 style="font-size: 18px; color: #2d3748; margin: 0 0 12px 0; font-weight: 700;">Key Trade-Offs</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                            ${rec.tradeoffs.map(t => `<div style="font-size: 15px;"><strong style="color: #667eea;">${t.label}:</strong> <span style="color: #2d3748;">${t.value}</span></div>`).join('')}
+                    <div style="background: #f7fafc; padding: 18px 20px; border-radius: 8px; border-left: 6px solid #667eea; margin-bottom: 18px; flex: 0 0 auto;">
+                        <h4 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700;">Key Trade-Offs</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 25px;">
+                            ${rec.tradeoffs.map(t => `<div style="font-size: 15px; flex: 0 0 auto;"><strong style="color: #667eea;">${t.label}:</strong> <span style="color: #2d3748;">${t.value}</span></div>`).join('')}
                         </div>
                     </div>
                     
                     <!-- Challenge Notes - ALWAYS VISIBLE -->
-                    <div style="background: ${notes ? '#fffbeb' : '#f7fafc'}; border-left: 6px solid ${notes ? '#f59e0b' : '#cbd5e0'}; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="background: ${notes ? '#fffbeb' : '#f7fafc'}; border-left: 6px solid ${notes ? '#f59e0b' : '#cbd5e0'}; padding: 18px 20px; border-radius: 8px; margin-bottom: 15px; flex: 1 1 auto; display: flex; flex-direction: column;">
                         <h4 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; display: flex; align-items: center;">
-                            <span style="margin-right: 8px;">⚠️</span> Category Lead Notes / Challenge
+                            <span style="margin-right: 8px; font-size: 20px;">⚠️</span> Category Lead Notes / Challenge
                         </h4>
-                        <p style="font-size: 15px; line-height: 1.6; color: ${notes ? '#78350f' : '#718096'}; margin: 0;">
+                        <p style="font-size: 15px; line-height: 1.6; color: ${notes ? '#78350f' : '#718096'}; margin: 0; flex: 1;">
                             ${notes || 'No disagreement with recommendation - proceeding as suggested by tool.'}
                         </p>
                     </div>
                     
                     <!-- Footer -->
-                    <div style="background: #edf2f7; padding: 12px 20px; border-radius: 6px; text-align: center; font-size: 13px; color: #4a5568;">
+                    <div style="background: #edf2f7; padding: 10px 20px; border-radius: 6px; text-align: center; font-size: 13px; color: #4a5568; flex: 0 0 auto;">
                         <strong>Note:</strong> This recommendation should be referenced in scoping documents and remain consistent through business case approval. Changes require re-assessment with updated criteria.
                     </div>
                 </div>
