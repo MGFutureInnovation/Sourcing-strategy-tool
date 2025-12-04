@@ -591,6 +591,87 @@
             padding-left: 20px;
         }
         
+        /* Radar Chart Styles */
+        .decision-analysis {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .decision-analysis h4 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .radar-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .radar-chart {
+            flex-shrink: 0;
+        }
+        
+        .radar-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 200px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: white;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .legend-item.winner {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .legend-label {
+            flex: 1;
+            font-weight: 600;
+            font-size: 14px;
+            color: #2d3748;
+        }
+        
+        .legend-score {
+            font-weight: 700;
+            font-size: 16px;
+            color: #667eea;
+        }
+        
+        .close-call-note {
+            text-align: center;
+            margin-top: 15px;
+            padding: 12px;
+            background: #fffbeb;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+        
         @media print {
             body {
                 background: white;
@@ -629,6 +710,10 @@
             .summary-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .radar-container {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -636,7 +721,7 @@
     <div class="container">
         <h1>Innovation Sourcing Strategy Tool</h1>
         <p class="subtitle">Answer a few questions to find the right approach for your project</p>
-        <div class="version-footer">v1.3.1 | November 2025 | Centered Screenshots</div>
+        <div class="version-footer">v1.4.0 | December 2025 | Decision Radar</div>
         <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
         
         <!-- Welcome Screen -->
@@ -980,6 +1065,9 @@
         const totalQuestions = 10;
         const answers = {};
         
+        // Store scores globally for radar chart
+        let lastCalculatedScores = null;
+        
         // Progress saving functionality
         function saveProgress() {
             const progress = {
@@ -1026,20 +1114,17 @@
         }
         
         // EmailJS Configuration and Email Notification Function
-        // SETUP REQUIRED: Follow instructions in email-setup-guide.md
-        
         const EMAIL_CONFIG = {
-            enabled: true, // Set to false to disable email notifications
-            serviceId: 'YOUR_SERVICE_ID', // Replace after EmailJS setup
-            templateId: 'YOUR_TEMPLATE_ID', // Replace after EmailJS setup
-            publicKey: 'YOUR_PUBLIC_KEY', // Replace after EmailJS setup
+            enabled: true,
+            serviceId: 'YOUR_SERVICE_ID',
+            templateId: 'YOUR_TEMPLATE_ID',
+            publicKey: 'YOUR_PUBLIC_KEY',
             adminEmail: 'jhume@mayborngroup.com'
         };
         
         function initializeEmailJS() {
             if (!EMAIL_CONFIG.enabled) return false;
             
-            // Check if EmailJS is configured
             if (EMAIL_CONFIG.serviceId === 'YOUR_SERVICE_ID' || 
                 EMAIL_CONFIG.templateId === 'YOUR_TEMPLATE_ID' ||
                 EMAIL_CONFIG.publicKey === 'YOUR_PUBLIC_KEY') {
@@ -1057,9 +1142,8 @@
         }
         
         function sendAdminNotification(assessment, recommendation) {
-            // Don't block the UI if email fails
             if (!EMAIL_CONFIG.enabled || !initializeEmailJS()) {
-                return; // Silently skip if not configured
+                return;
             }
             
             const userName = document.getElementById('userName')?.value || 'Anonymous User';
@@ -1072,7 +1156,6 @@
                 minute: '2-digit'
             });
             
-            // Prepare email parameters
             const emailParams = {
                 to_email: EMAIL_CONFIG.adminEmail,
                 user_name: userName,
@@ -1086,22 +1169,17 @@
                 capability: answers.capability || 'Not specified',
                 investment: answers.investment || 'Not specified',
                 challenge_notes: assessment.challengeNotes || 'None - user agrees with recommendation',
-                // Key trade-offs as string
                 tradeoffs: recommendation.tradeoffs.map(t => `${t.label}: ${t.value}`).join(' | '),
-                // Accepting summary
                 accepting: recommendation.accepting.slice(0, 3).join('; '),
-                // Sacrificing summary  
                 sacrificing: recommendation.sacrificing.slice(0, 3).join('; ')
             };
             
-            // Send email asynchronously (don't block UI)
             emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, emailParams)
                 .then(function(response) {
                     console.log('Admin notification sent successfully', response.status, response.text);
                 })
                 .catch(function(error) {
                     console.warn('Failed to send admin notification:', error);
-                    // Don't show error to user - this is a background feature
                 });
         }
         
@@ -1140,15 +1218,12 @@
             document.getElementById('welcomeScreen').style.display = 'none';
             document.getElementById('assessmentContent').style.display = 'block';
             
-            // Try to restore saved progress
             if (restoreProgress()) {
-                // Progress was restored, update UI to match
                 for (let i = 1; i < currentQuestion; i++) {
                     document.getElementById('q' + i).classList.remove('active');
                 }
                 document.getElementById('q' + currentQuestion).classList.add('active');
                 
-                // Populate select elements with saved answers
                 if (answers.category) categorySelect.value = answers.category;
                 if (answers.intent) intentSelect.value = answers.intent;
                 if (answers.volume) volumeSelect.value = answers.volume;
@@ -1163,7 +1238,6 @@
                 updateProgress();
                 updateNavigation();
                 
-                // Enable next button if current question has an answer
                 const currentSelect = getCurrentSelect();
                 nextBtn.disabled = !currentSelect.value;
             }
@@ -1189,7 +1263,6 @@
                 updateProgress();
                 updateNavigation();
                 
-                // Check if current question already has an answer
                 const currentSelect = getCurrentSelect();
                 nextBtn.disabled = !currentSelect.value;
             } else {
@@ -1227,7 +1300,6 @@
         }
         
         function calculateRecommendation() {
-            // Decision logic
             const scores = {
                 own: 0,
                 joint: 0,
@@ -1253,20 +1325,20 @@
                 scores.joint += 1;
             }
             
-            // Volume scoring - high volume makes Own more economically viable
+            // Volume scoring
             if (answers.volume === 'very-high') {
-                scores.own += 3; // Increased - economies of scale justify investment
-                scores.source += 2; // Source also good at high volume
+                scores.own += 3;
+                scores.source += 2;
             } else if (answers.volume === 'high') {
                 scores.own += 2;
                 scores.source += 2;
             } else if (answers.volume === 'medium') {
                 scores.partner += 2;
-                scores.own -= 2; // Can't justify 500K+ investment at 10-50K units
+                scores.own -= 2;
             } else if (answers.volume === 'low') {
                 scores.partner += 3;
                 scores.source += 2;
-                scores.own -= 4; // Heavily penalize Own - investment makes no sense at <10K units
+                scores.own -= 4;
             }
             
             // Timeline scoring
@@ -1282,7 +1354,7 @@
             
             // Position scoring
             if (answers.position === 'leader') {
-                scores.own += 3; // Increased weight for market leaders
+                scores.own += 3;
             } else if (answers.position === 'player') {
                 scores.own += 1;
             } else if (answers.position === 'new') {
@@ -1290,23 +1362,21 @@
                 scores.source += 1;
             }
             
-            // Crowdedness scoring - but context matters
+            // Crowdedness scoring
             if (answers.crowded === 'open') {
                 scores.own += 2;
             } else if (answers.crowded === 'crowded' || answers.crowded === 'saturated') {
-                // If you're a leader in a crowded market, you should Own to defend
-                // If you're new/challenger in crowded market, Source makes sense
                 if (answers.position === 'leader' || answers.position === 'player') {
-                    scores.own += 1; // Still favor Own for established players
+                    scores.own += 1;
                 } else {
                     scores.source += 2;
                     scores.partner += 1;
                 }
             }
             
-            // Capability scoring - this is crucial
+            // Capability scoring
             if (answers.capability === 'strong') {
-                scores.own += 4; // Increased - strong capability is a major Own signal
+                scores.own += 4;
             } else if (answers.capability === 'some') {
                 scores.joint += 2;
                 scores.partner += 2;
@@ -1320,31 +1390,30 @@
                 scores.own -= 2;
             }
             
-            // IP Ownership scoring - critical reality check
+            // IP Ownership scoring
             if (answers.ip === 'own-all') {
-                scores.own += 3; // Clear path to Own
+                scores.own += 3;
             } else if (answers.ip === 'own-most') {
-                scores.own += 1; // Some flexibility but partner dependency
+                scores.own += 1;
                 scores.joint += 1;
             } else if (answers.ip === 'shared') {
-                scores.joint += 4; // Already in a JV, this is your reality
-                scores.own -= 2; // Can't truly Own without buying out partner
+                scores.joint += 4;
+                scores.own -= 2;
             } else if (answers.ip === 'partner-owns') {
-                scores.partner += 3; // Dependent on their platform
-                scores.own -= 3; // Can't Own what they control
+                scores.partner += 3;
+                scores.own -= 3;
             } else if (answers.ip === 'greenfield') {
-                // NPD where you want to develop IP - favor Own if you have capability
                 if (answers.capability === 'strong') {
-                    scores.own += 3; // Go build it
+                    scores.own += 3;
                 } else if (answers.capability === 'some') {
-                    scores.joint += 2; // Partner to fill gaps
+                    scores.joint += 2;
                     scores.own += 1;
                 } else {
-                    scores.joint += 2; // Need partner help
+                    scores.joint += 2;
                     scores.partner += 1;
                 }
             } else if (answers.ip === 'none') {
-                scores.source += 1; // Commodity, no IP moat
+                scores.source += 1;
             }
             
             // Investment scoring
@@ -1357,35 +1426,169 @@
                 scores.own -= 2;
             }
             
-            // Customization level scoring - critical for Partner vs Source distinction
+            // Customization level scoring
             if (answers.customization === 'branding') {
-                // Branding only = just fancy Source, not worth partner overhead
                 scores.source += 3;
-                scores.partner -= 2; // Don't overcomplicate with partner for cosmetic changes
+                scores.partner -= 2;
             } else if (answers.customization === 'design') {
-                // External design = true Partner & Adapt sweet spot
                 scores.partner += 3;
-                scores.source -= 1; // Can't get real design changes from Source
+                scores.source -= 1;
             } else if (answers.customization === 'performance') {
-                // Performance tuning = advanced Partner or Joint Development
                 scores.partner += 2;
                 scores.joint += 2;
-                scores.source -= 2; // Source can't deliver performance customization
+                scores.source -= 2;
             } else if (answers.customization === 'core-tech') {
-                // Core tech from scratch = Own or Joint Development
                 scores.joint += 3;
                 scores.own += 2;
-                scores.partner -= 2; // Partner & Adapt won't work if no existing platform fits
+                scores.partner -= 2;
             }
+            
+            // Store scores globally for radar chart
+            lastCalculatedScores = {...scores};
             
             // Find highest score
             const maxScore = Math.max(scores.own, scores.joint, scores.partner, scores.source);
             
-            // Return recommendation
             if (scores.own === maxScore) return 'own';
             if (scores.joint === maxScore) return 'joint';
             if (scores.partner === maxScore) return 'partner';
             return 'source';
+        }
+        
+        // Generate SVG radar chart
+        function generateRadarChart(scores, winner) {
+            const size = 280;
+            const center = size / 2;
+            const maxRadius = 100;
+            
+            // Normalize scores to 0-100 range for display
+            const allScores = Object.values(scores);
+            const minScore = Math.min(...allScores);
+            const maxScore = Math.max(...allScores);
+            const range = maxScore - minScore || 1;
+            
+            const normalizedScores = {
+                own: ((scores.own - minScore) / range) * 80 + 20,
+                joint: ((scores.joint - minScore) / range) * 80 + 20,
+                partner: ((scores.partner - minScore) / range) * 80 + 20,
+                source: ((scores.source - minScore) / range) * 80 + 20
+            };
+            
+            // Four axes at 0, 90, 180, 270 degrees (top, right, bottom, left)
+            const axes = [
+                { key: 'own', label: 'Own & Build', angle: -90, color: '#10b981' },
+                { key: 'partner', label: 'Partner & Adapt', angle: 0, color: '#3b82f6' },
+                { key: 'source', label: 'Source & Specify', angle: 90, color: '#8b5cf6' },
+                { key: 'joint', label: 'Joint Development', angle: 180, color: '#f59e0b' }
+            ];
+            
+            // Calculate polygon points
+            const points = axes.map(axis => {
+                const rad = (axis.angle * Math.PI) / 180;
+                const value = normalizedScores[axis.key] / 100;
+                return {
+                    x: center + Math.cos(rad) * maxRadius * value,
+                    y: center + Math.sin(rad) * maxRadius * value
+                };
+            });
+            
+            const polygonPoints = points.map(p => `${p.x},${p.y}`).join(' ');
+            
+            // Generate grid circles
+            const gridCircles = [0.25, 0.5, 0.75, 1].map(ratio => 
+                `<circle cx="${center}" cy="${center}" r="${maxRadius * ratio}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`
+            ).join('');
+            
+            // Generate axis lines and labels
+            const axisLines = axes.map(axis => {
+                const rad = (axis.angle * Math.PI) / 180;
+                const endX = center + Math.cos(rad) * maxRadius;
+                const endY = center + Math.sin(rad) * maxRadius;
+                const labelX = center + Math.cos(rad) * (maxRadius + 25);
+                const labelY = center + Math.sin(rad) * (maxRadius + 25);
+                
+                const isWinner = axis.key === winner;
+                const labelColor = isWinner ? axis.color : '#64748b';
+                const fontWeight = isWinner ? '700' : '500';
+                
+                return `
+                    <line x1="${center}" y1="${center}" x2="${endX}" y2="${endY}" stroke="#cbd5e0" stroke-width="1"/>
+                    <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" 
+                          fill="${labelColor}" font-size="11" font-weight="${fontWeight}">${axis.label.split(' ')[0]}</text>
+                `;
+            }).join('');
+            
+            // Generate data points
+            const dataPoints = axes.map((axis, i) => {
+                const isWinner = axis.key === winner;
+                return `<circle cx="${points[i].x}" cy="${points[i].y}" r="${isWinner ? 8 : 5}" 
+                         fill="${axis.color}" stroke="white" stroke-width="2"/>`;
+            }).join('');
+            
+            return `
+                <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                    <!-- Grid -->
+                    ${gridCircles}
+                    
+                    <!-- Axes -->
+                    ${axisLines}
+                    
+                    <!-- Data polygon -->
+                    <polygon points="${polygonPoints}" fill="rgba(102, 126, 234, 0.2)" stroke="#667eea" stroke-width="2"/>
+                    
+                    <!-- Data points -->
+                    ${dataPoints}
+                </svg>
+            `;
+        }
+        
+        // Generate decision analysis HTML
+        function generateDecisionAnalysis(scores, winner) {
+            const approaches = [
+                { key: 'own', label: 'Own & Build', color: '#10b981' },
+                { key: 'partner', label: 'Partner & Adapt', color: '#3b82f6' },
+                { key: 'source', label: 'Source & Specify', color: '#8b5cf6' },
+                { key: 'joint', label: 'Joint Development', color: '#f59e0b' }
+            ];
+            
+            // Sort by score descending
+            const sorted = approaches.map(a => ({...a, score: scores[a.key]}))
+                                     .sort((a, b) => b.score - a.score);
+            
+            // Check if it was a close call (within 2 points of winner)
+            const winnerScore = sorted[0].score;
+            const runnerUp = sorted[1];
+            const isCloseCall = (winnerScore - runnerUp.score) <= 2;
+            
+            const legendItems = sorted.map(item => `
+                <div class="legend-item ${item.key === winner ? 'winner' : ''}">
+                    <div class="legend-color" style="background: ${item.color}"></div>
+                    <div class="legend-label">${item.label}</div>
+                    <div class="legend-score">${item.score > 0 ? '+' : ''}${item.score}</div>
+                </div>
+            `).join('');
+            
+            const closeCallNote = isCloseCall ? `
+                <div class="close-call-note">
+                    <strong>Close call:</strong> ${runnerUp.label} scored within ${winnerScore - runnerUp.score} points. 
+                    Consider if circumstances change, the alternative may become more appropriate.
+                </div>
+            ` : '';
+            
+            return `
+                <div class="decision-analysis">
+                    <h4>📊 How Your Answers Scored</h4>
+                    <div class="radar-container">
+                        <div class="radar-chart">
+                            ${generateRadarChart(scores, winner)}
+                        </div>
+                        <div class="radar-legend">
+                            ${legendItems}
+                        </div>
+                    </div>
+                    ${closeCallNote}
+                </div>
+            `;
         }
         
         function showRecommendation() {
@@ -1399,11 +1602,12 @@
                 categoryValue: answers.category,
                 approach: approach,
                 answers: {...answers},
-                challengeNotes: '' // Will be updated if they add notes
+                scores: {...lastCalculatedScores},
+                challengeNotes: ''
             };
             
             saveAssessment(assessment);
-            clearProgress(); // Clear saved progress since assessment is complete
+            clearProgress();
             
             // Hide questions, show recommendation
             document.getElementById('q' + currentQuestion).classList.remove('active');
@@ -1571,13 +1775,13 @@
             
             const rec = recommendations[approach];
             
-            // Send admin notification email (non-blocking, fails silently if not configured)
+            // Send admin notification email
             sendAdminNotification(assessment, rec);
             
             document.getElementById('approachTitle').textContent = rec.title;
             document.getElementById('approachSubtitle').textContent = rec.subtitle;
             
-            // Add product benefit if it exists
+            // Add product benefit
             const headerElement = document.querySelector('.recommendation-header');
             if (rec.productBenefit && headerElement) {
                 const benefitHtml = `
@@ -1591,7 +1795,7 @@
             
             document.getElementById('rationale').textContent = rec.rationale;
             
-            // Create summary section for screenshots/scoping docs
+            // Create summary section with radar chart
             const summaryHtml = `
                 <div class="recommendation-summary">
                     <div class="summary-header">
@@ -1604,6 +1808,10 @@
                             <div><strong>Date:</strong> ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
                         </div>
                     </div>
+                    
+                    <!-- Decision Analysis Radar Chart -->
+                    ${generateDecisionAnalysis(lastCalculatedScores, approach)}
+                    
                     <div class="summary-grid">
                         <div class="summary-section">
                             <h4>What You're Accepting ✓</h4>
@@ -1633,7 +1841,7 @@
                         ></textarea>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                             <div style="font-size: 13px; color: #718096;">
-                                Example: "Tool recommends Partner & Adapt, but we're choosing Own & Build due to strategic IP requirements and need for complete control over suction pattern innovation."
+                                Example: "Tool recommends Partner & Adapt, but we're choosing Own & Build due to strategic IP requirements."
                             </div>
                             <button id="saveNotesBtn" class="btn-primary" style="width: auto; padding: 10px 24px; font-size: 14px;" onclick="saveNotes()">
                                 Save Notes
@@ -1650,7 +1858,7 @@
             const recommendationDiv = document.getElementById('recommendation');
             const firstSection = recommendationDiv.querySelector('.section');
             
-            // Add screenshot button before summary
+            // Add screenshot button
             const screenshotBtnHtml = `
                 <div style="text-align: right; margin-bottom: 15px;">
                     <button class="btn-primary" id="screenshotBtn" onclick="downloadScreenshot()" style="width: auto; padding: 12px 24px; font-size: 15px;">
@@ -1685,7 +1893,7 @@
                             <li>Build consumer awareness and preference</li>
                             <li>Sell 200K-500K units = 2-5M+ revenue head start</li>
                         </ul>
-                        <p style="margin-top: 12px;"><strong>Question to ask:</strong> Is perfect differentiation in 18 months better than 75% differentiation in 6 months? Or will the market have moved on without you?</p>
+                        <p style="margin-top: 12px;"><strong>Question to ask:</strong> Is perfect differentiation in 18 months better than 75% differentiation in 6 months?</p>
                     </div>
                 `;
                 firstSection.insertAdjacentHTML('beforebegin', delayWarningHtml);
@@ -1717,7 +1925,7 @@
             ).join('');
             document.getElementById('warnings').innerHTML = warningsHtml;
             
-            // Clarification section (only for Partner & Adapt)
+            // Clarification section
             const clarificationSection = document.getElementById('clarificationSection');
             if (rec.clarification) {
                 clarificationSection.style.display = 'block';
@@ -1748,21 +1956,19 @@
         }
         
         function restart() {
-            // Clear saved progress
             clearProgress();
             
-            // Reset everything
             currentQuestion = 1;
             Object.keys(answers).forEach(key => delete answers[key]);
+            lastCalculatedScores = null;
             
-            // Reset all selects
             [categorySelect, intentSelect, volumeSelect, timelineSelect, 
              positionSelect, crowdedSelect, capabilitySelect, ipSelect, customizationSelect, investmentSelect].forEach(select => {
                 select.value = '';
             });
             
-            // Remove dynamically added summary, warnings, and screenshot elements
-            const summaryElements = document.querySelectorAll('.recommendation-summary, .delay-warning-box');
+            // Remove dynamically added elements
+            const summaryElements = document.querySelectorAll('.recommendation-summary, .delay-warning-box, .decision-analysis');
             summaryElements.forEach(el => el.remove());
             
             const screenshotBtn = document.getElementById('screenshotBtn');
@@ -1770,11 +1976,15 @@
                 screenshotBtn.parentElement.remove();
             }
             
-            // Reset container width
+            // Remove product benefit from header
+            const benefitDiv = document.querySelector('.recommendation-header > div:last-child');
+            if (benefitDiv && benefitDiv.querySelector('div')) {
+                benefitDiv.remove();
+            }
+            
             const container = document.querySelector('.container');
             container.style.maxWidth = '800px';
             
-            // Reset UI
             document.getElementById('recommendation').classList.remove('active');
             document.getElementById('assessmentContent').style.display = 'none';
             document.getElementById('welcomeScreen').style.display = 'block';
@@ -1787,7 +1997,6 @@
             nextBtn.disabled = true;
         }
         
-        // Initialize
         updateProgress();
         
         // Assessment storage functions
@@ -1799,8 +2008,6 @@
             const assessments = getAssessments();
             assessments.push(assessment);
             localStorage.setItem('mayborn_assessments', JSON.stringify(assessments));
-            
-            // Store current assessment ID for updating notes
             localStorage.setItem('current_assessment_id', assessment.id);
         }
         
@@ -1822,26 +2029,20 @@
         }
         
         function deleteAssessment(assessmentId) {
-            // Confirm deletion
             if (!confirm(`Are you sure you want to delete assessment ${assessmentId}? This cannot be undone.`)) {
                 return;
             }
             
-            // Get assessments and filter out the one to delete
             const assessments = getAssessments();
             const filteredAssessments = assessments.filter(a => a.id !== assessmentId);
-            
-            // Save back to localStorage
             localStorage.setItem('mayborn_assessments', JSON.stringify(filteredAssessments));
-            
-            // Refresh the admin view (without password prompt)
             renderAdminView();
         }
         
         function showAdminView() {
             const password = prompt('Enter admin password:');
             if (password !== '54325') {
-                if (password !== null) { // Only alert if they didn't cancel
+                if (password !== null) {
                     alert('Incorrect password');
                 }
                 return;
@@ -1910,6 +2111,17 @@
                 investment: 'Investment Appetite'
             };
             
+            // Generate radar chart for modal if scores exist
+            let radarHtml = '';
+            if (assessment.scores) {
+                radarHtml = `
+                    <h4 style="margin: 20px 0 12px; color: #2d3748;">Decision Scores:</h4>
+                    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                        ${generateRadarChart(assessment.scores, assessment.approach)}
+                    </div>
+                `;
+            }
+            
             const detailsHtml = `
                 <h3 style="margin-bottom: 20px; color: #2d3748;">Assessment ${assessment.id}</h3>
                 <div style="background: #f7fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
@@ -1917,6 +2129,7 @@
                     <strong>Category:</strong> ${assessment.category}<br>
                     <strong>Recommendation:</strong> <span class="approach-badge approach-${assessment.approach}">${assessment.approach === 'own' ? 'Own & Build' : assessment.approach === 'joint' ? 'Joint Development' : assessment.approach === 'partner' ? 'Partner & Adapt' : 'Source & Specify'}</span>
                 </div>
+                ${radarHtml}
                 <h4 style="margin-bottom: 12px; color: #2d3748;">Assessment Inputs:</h4>
                 <table style="width: 100%; border-collapse: collapse;">
                     ${Object.entries(assessment.answers).filter(([key]) => key !== 'category').map(([key, value]) => `
@@ -1956,22 +2169,20 @@
                 source: 'Source & Specify'
             };
             
-            // CSV headers
-            let csv = 'Assessment ID,Date,Time,Sub-category,Recommendation,Strategic Goal,Volume,Timeline,Position,Crowdedness,Capability,IP Ownership,Customization,Investment,Challenge Notes\n';
+            let csv = 'Assessment ID,Date,Time,Sub-category,Recommendation,Own Score,Joint Score,Partner Score,Source Score,Strategic Goal,Volume,Timeline,Position,Crowdedness,Capability,IP Ownership,Customization,Investment,Challenge Notes\n';
             
-            // CSV rows
             assessments.forEach(a => {
                 const date = new Date(a.timestamp);
                 const dateStr = date.toLocaleDateString('en-GB');
                 const timeStr = date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
                 
                 csv += `"${a.id}","${dateStr}","${timeStr}","${a.category}","${approaches[a.approach]}",`;
+                csv += `"${a.scores?.own || ''}","${a.scores?.joint || ''}","${a.scores?.partner || ''}","${a.scores?.source || ''}",`;
                 csv += `"${a.answers.intent || ''}","${a.answers.volume || ''}","${a.answers.timeline || ''}",`;
                 csv += `"${a.answers.position || ''}","${a.answers.crowded || ''}","${a.answers.capability || ''}",`;
                 csv += `"${a.answers.ip || ''}","${a.answers.customization || ''}","${a.answers.investment || ''}","${(a.challengeNotes || '').replace(/"/g, '""')}"\n`;
             });
             
-            // Download
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1988,11 +2199,9 @@
             const notes = notesTextarea ? notesTextarea.value : '';
             updateAssessmentNotes(notes);
             
-            // Show confirmation
             const confirmation = document.getElementById('saveConfirmation');
             confirmation.style.display = 'block';
             
-            // Hide after 3 seconds
             setTimeout(() => {
                 confirmation.style.display = 'none';
             }, 3000);
@@ -2005,91 +2214,115 @@
             btn.disabled = true;
             loading.style.display = 'inline';
             
-            // Get current recommendation data
             const approach = calculateRecommendation();
             const rec = getRecommendationData(approach);
             const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
             const dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
             const notes = document.getElementById('challengeNotes')?.value || '';
             
-            // FIXED: Create PowerPoint-optimized screenshot (16:9 aspect ratio - 1920x1080) with proper right padding
+            // Get scores for mini radar in screenshot
+            const scores = lastCalculatedScores;
+            const sorted = [
+                { key: 'own', label: 'Own', score: scores.own, color: '#10b981' },
+                { key: 'partner', label: 'Partner', score: scores.partner, color: '#3b82f6' },
+                { key: 'source', label: 'Source', score: scores.source, color: '#8b5cf6' },
+                { key: 'joint', label: 'Joint', score: scores.joint, color: '#f59e0b' }
+            ].sort((a, b) => b.score - a.score);
+            
+            const winnerScore = sorted[0].score;
+            const isCloseCall = (winnerScore - sorted[1].score) <= 2;
+            
             const container = document.createElement('div');
             container.className = 'screenshot-container';
             container.innerHTML = `
                 <div style="width: 1920px; height: 1080px; background: white; padding: 35px 60px 35px 50px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
                     <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; padding-bottom: 15px; border-bottom: 3px solid #667eea; gap: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 3px solid #667eea; gap: 20px;">
                         <div style="flex: 1; min-width: 0;">
-                            <h1 style="font-size: 36px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ${rec.title}</h1>
-                            <p style="font-size: 18px; color: #718096; margin: 0; line-height: 1.3;">${rec.subtitle}</p>
+                            <h1 style="font-size: 32px; color: #2d3748; margin: 0 0 6px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ${rec.title}</h1>
+                            <p style="font-size: 16px; color: #718096; margin: 0; line-height: 1.3;">${rec.subtitle}</p>
                         </div>
-                        <div style="text-align: right; font-size: 15px; color: #4a5568; flex-shrink: 0; min-width: 280px; max-width: 320px;">
-                            <div style="margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><strong>Category:</strong> ${categoryText}</div>
-                            <div style="margin-bottom: 8px; white-space: nowrap;"><strong>Date:</strong> ${dateText}</div>
-                            <div style="padding: 6px 14px; background: #667eea; color: white; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 14px; white-space: nowrap;">${rec.title}</div>
+                        <div style="text-align: right; font-size: 14px; color: #4a5568; flex-shrink: 0; min-width: 260px;">
+                            <div style="margin-bottom: 3px;"><strong>Category:</strong> ${categoryText}</div>
+                            <div style="margin-bottom: 6px;"><strong>Date:</strong> ${dateText}</div>
+                            <div style="padding: 5px 12px; background: #667eea; color: white; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 13px;">${rec.title}</div>
                         </div>
                     </div>
                     
-                    <!-- Main Content Grid -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 18px; flex: 0 0 auto;">
+                    <!-- Main Content: 3 Column Layout -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 280px; gap: 25px; flex: 1; min-height: 0;">
+                        
                         <!-- Left Column: Accepting -->
-                        <div>
-                            <h3 style="font-size: 20px; color: #2d3748; margin: 0 0 12px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #38a169; margin-right: 8px; font-size: 24px;">✓</span> What You're Accepting
+                        <div style="display: flex; flex-direction: column;">
+                            <h3 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; display: flex; align-items: center;">
+                                <span style="color: #38a169; margin-right: 8px; font-size: 20px;">✓</span> What You're Accepting
                             </h3>
-                            <ul style="list-style: none; padding: 0; margin: 0;">
-                                ${rec.accepting.map(item => `<li style="padding: 8px 0; color: #2d3748; font-size: 15px; line-height: 1.5; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 8px;">✓</span>${item}</li>`).join('')}
+                            <ul style="list-style: none; padding: 0; margin: 0; flex: 1;">
+                                ${rec.accepting.map(item => `<li style="padding: 7px 0; color: #2d3748; font-size: 14px; line-height: 1.45; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 8px;">✓</span>${item}</li>`).join('')}
                             </ul>
                         </div>
                         
-                        <!-- Right Column: Sacrificing -->
-                        <div>
-                            <h3 style="font-size: 20px; color: #2d3748; margin: 0 0 12px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #e53e3e; margin-right: 8px; font-size: 24px;">✗</span> What You're Sacrificing
+                        <!-- Middle Column: Sacrificing -->
+                        <div style="display: flex; flex-direction: column;">
+                            <h3 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; display: flex; align-items: center;">
+                                <span style="color: #e53e3e; margin-right: 8px; font-size: 20px;">✗</span> What You're Sacrificing
                             </h3>
-                            <ul style="list-style: none; padding: 0; margin: 0;">
-                                ${rec.sacrificing.map(item => `<li style="padding: 8px 0; color: #2d3748; font-size: 15px; line-height: 1.5; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 8px;">✗</span>${item}</li>`).join('')}
+                            <ul style="list-style: none; padding: 0; margin: 0; flex: 1;">
+                                ${rec.sacrificing.map(item => `<li style="padding: 7px 0; color: #2d3748; font-size: 14px; line-height: 1.45; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 8px;">✗</span>${item}</li>`).join('')}
                             </ul>
+                        </div>
+                        
+                        <!-- Right Column: Decision Radar -->
+                        <div style="background: #f7fafc; border-radius: 10px; padding: 15px; border: 2px solid #e2e8f0; display: flex; flex-direction: column;">
+                            <h4 style="font-size: 14px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; text-align: center;">📊 Decision Scores</h4>
+                            <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                                ${sorted.map((item, i) => `
+                                    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: ${i === 0 ? '#eef2ff' : 'white'}; border-radius: 6px; border: 2px solid ${i === 0 ? '#667eea' : '#e2e8f0'};">
+                                        <div style="width: 12px; height: 12px; border-radius: 3px; background: ${item.color}; flex-shrink: 0;"></div>
+                                        <div style="flex: 1; font-size: 13px; font-weight: ${i === 0 ? '700' : '500'}; color: #2d3748;">${item.label}</div>
+                                        <div style="font-size: 15px; font-weight: 700; color: ${item.color};">${item.score > 0 ? '+' : ''}${item.score}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${isCloseCall ? `<div style="margin-top: 10px; padding: 8px; background: #fffbeb; border-radius: 6px; font-size: 11px; color: #92400e; text-align: center; border-left: 3px solid #f59e0b;"><strong>Close call</strong> - ${sorted[1].label} was ${winnerScore - sorted[1].score} pts behind</div>` : ''}
                         </div>
                     </div>
                     
                     <!-- Key Trade-Offs Row -->
-                    <div style="background: #f7fafc; padding: 18px 20px; border-radius: 8px; border-left: 6px solid #667eea; margin-bottom: 18px; flex: 0 0 auto;">
-                        <h4 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700;">Key Trade-Offs</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 25px;">
-                            ${rec.tradeoffs.map(t => `<div style="font-size: 15px; flex: 0 0 auto;"><strong style="color: #667eea;">${t.label}:</strong> <span style="color: #2d3748;">${t.value}</span></div>`).join('')}
+                    <div style="background: #f7fafc; padding: 14px 18px; border-radius: 8px; border-left: 5px solid #667eea; margin: 15px 0;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                            <h4 style="font-size: 15px; color: #2d3748; margin: 0; font-weight: 700;">Key Trade-Offs:</h4>
+                            ${rec.tradeoffs.map(t => `<div style="font-size: 14px;"><strong style="color: #667eea;">${t.label}:</strong> <span style="color: #2d3748;">${t.value}</span></div>`).join('')}
                         </div>
                     </div>
                     
-                    <!-- Challenge Notes - ALWAYS VISIBLE -->
-                    <div style="background: ${notes ? '#fffbeb' : '#f7fafc'}; border-left: 6px solid ${notes ? '#f59e0b' : '#cbd5e0'}; padding: 18px 20px; border-radius: 8px; margin-bottom: 15px; flex: 1 1 auto; display: flex; flex-direction: column;">
-                        <h4 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; display: flex; align-items: center;">
-                            <span style="margin-right: 8px; font-size: 20px;">⚠️</span> Category Lead Notes / Challenge
+                    <!-- Challenge Notes -->
+                    <div style="background: ${notes ? '#fffbeb' : '#f7fafc'}; border-left: 5px solid ${notes ? '#f59e0b' : '#cbd5e0'}; padding: 14px 18px; border-radius: 8px; margin-bottom: 12px;">
+                        <h4 style="font-size: 15px; color: #2d3748; margin: 0 0 6px 0; font-weight: 700; display: flex; align-items: center;">
+                            <span style="margin-right: 8px;">⚠️</span> Category Lead Notes / Challenge
                         </h4>
-                        <p style="font-size: 15px; line-height: 1.6; color: ${notes ? '#78350f' : '#718096'}; margin: 0; flex: 1;">
+                        <p style="font-size: 14px; line-height: 1.5; color: ${notes ? '#78350f' : '#718096'}; margin: 0;">
                             ${notes || 'No disagreement with recommendation - proceeding as suggested by tool.'}
                         </p>
                     </div>
                     
                     <!-- Footer -->
-                    <div style="background: #edf2f7; padding: 10px 20px; border-radius: 6px; text-align: center; font-size: 13px; color: #4a5568; flex: 0 0 auto;">
-                        <strong>Note:</strong> This recommendation should be referenced in scoping documents and remain consistent through business case approval. Changes require re-assessment with updated criteria.
+                    <div style="background: #edf2f7; padding: 8px 18px; border-radius: 6px; text-align: center; font-size: 12px; color: #4a5568;">
+                        <strong>Note:</strong> This recommendation should be referenced in scoping documents and remain consistent through business case approval.
                     </div>
                 </div>
             `;
             
             document.body.appendChild(container);
             
-            // Use html2canvas to capture - PowerPoint-optimized 16:9 aspect ratio
             html2canvas(container, {
-                scale: 1.5, // High quality but not too large
+                scale: 1.5,
                 backgroundColor: '#ffffff',
                 logging: false,
                 width: 1920,
                 height: 1080,
                 windowWidth: 1920
             }).then(canvas => {
-                // Convert to blob and download
                 canvas.toBlob(blob => {
                     if (!blob) {
                         throw new Error('Failed to create image blob');
@@ -2097,7 +2330,6 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    // Better filename with approach name
                     const approachSlug = approach.replace(/[^a-z0-9]/gi, '-').toLowerCase();
                     const categorySlug = categoryText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                     const dateSlug = new Date().toISOString().split('T')[0];
@@ -2107,7 +2339,6 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                     
-                    // Cleanup
                     document.body.removeChild(container);
                     btn.disabled = false;
                     loading.style.display = 'none';
@@ -2122,14 +2353,10 @@
         }
         
         function getRecommendationData(approach) {
-            // This is a copy of the recommendations object from showRecommendation
-            // We need it accessible for the screenshot function
             const recommendations = {
                 own: {
                     title: 'Own & Build',
                     subtitle: 'Maximum control, full ownership, long-term strategic play',
-                    productBenefit: 'Enables breakthrough innovation that redefines the category, creates new consumer habits, and owns the narrative completely.',
-                    rationale: `Based on your answers, this project warrants full ownership. You have ${answers.capability === 'strong' ? 'strong in-house capability' : 'the strategic importance'}, ${answers.intent === 'core-brand' ? 'core brand differentiation goals' : 'long-term strategic value'}, and ${answers.investment === 'high' ? 'appropriate investment appetite' : 'patient timeline'} that justify the higher investment and longer development cycle.`,
                     accepting: [
                         'Maximum control over product roadmap and future iterations',
                         'Full IP ownership - can prevent competitor copying',
@@ -2147,24 +2374,11 @@
                         { label: 'Timeline', value: '18-24 months' },
                         { label: 'Investment', value: '500K-2M+' },
                         { label: 'Risk', value: 'Highest' }
-                    ],
-                    implications: [
-                        { title: 'Full IP Ownership', content: 'You own all design, patents, and technical know-how. Can prevent competitors from copying.' },
-                        { title: 'Product Roadmap Control', content: 'Complete freedom to iterate, improve, and extend the product line.' },
-                        { title: 'Manufacturing Flexibility', content: 'Can switch suppliers and optimize for cost over time.' },
-                        { title: 'Higher Upfront Investment', content: 'Expect 500K-2M+ in tooling, R&D, compliance testing, and initial inventory.' }
-                    ],
-                    warnings: [
-                        { content: 'If volumes don\'t materialize, you\'re stuck with tooling costs and inventory risk.' },
-                        { content: 'Timeline is typically 18-24 months from concept to launch.' }
-                    ],
-                    reconsider: 'If volumes are under 100K units/year after 6-12 months, or if competitor innovation accelerates, consider Partner & Adapt.'
+                    ]
                 },
                 joint: {
                     title: 'Joint Development',
                     subtitle: 'Shared R&D from scratch - use sparingly',
-                    productBenefit: 'Combines our brand trust with partner\'s technical capability to deliver credible innovation we couldn\'t achieve alone.',
-                    rationale: `${answers.ip === 'shared' ? 'You already have shared IP ownership with a partner. ' : ''}You need capabilities you don't have, but this project has strategic importance warranting co-creation rather than adaptation.`,
                     accepting: [
                         'Access to partner capabilities and IP you don\'t have',
                         'Shared financial risk and investment',
@@ -2182,24 +2396,11 @@
                         { label: 'Timeline', value: '18-24+ months' },
                         { label: 'Investment', value: 'Shared (250K-1M)' },
                         { label: 'Coordination', value: 'High complexity' }
-                    ],
-                    implications: [
-                        { title: 'Partner Governance Required', content: 'Need clear IP agreements, decision rights, exit clauses. Budget 20-30% overhead.' },
-                        { title: 'Slowest Approach', content: 'Two sets of stakeholders and approvals. Add 6-12 months to Own timeline.' },
-                        { title: 'Shared Margin Forever', content: 'Partner typically takes 15-25% of margin in perpetuity.' },
-                        { title: 'Strategic Partnership Benefits', content: 'Access to capabilities you don\'t have with shared risk.' }
-                    ],
-                    warnings: [
-                        { content: 'This is the SLOWEST approach due to coordination complexity.' },
-                        { content: 'Partner misalignment can kill projects. Ensure aligned incentives.' }
-                    ],
-                    reconsider: answers.ip === 'shared' ? 'If volumes exceed 500K units/year, evaluate buying out their IP to move to Own.' : 'If coordination takes longer than development, consider buying them out or pivoting to Partner & Adapt.'
+                    ]
                 },
                 partner: {
                     title: 'Partner & Adapt',
                     subtitle: 'Customize existing solution - the sweet spot',
-                    productBenefit: 'Enables us to own the narrative and positioning in line with our brand language while delivering proven performance consumers trust.',
-                    rationale: `You need ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'speed to market' : 'balanced speed'}, have ${answers.capability === 'weak' || answers.capability === 'none' ? 'limited capability' : 'some capability'}, and ${answers.intent === 'test-learn' ? 'want to validate before commitment' : 'want efficient market entry'}.`,
                     accepting: [
                         'Fast to market - 6-9 months from brief to launch',
                         'Lower investment & risk (50K-200K)',
@@ -2217,39 +2418,16 @@
                         { label: 'Timeline', value: '6-9 months' },
                         { label: 'Investment', value: '50K-200K' },
                         { label: 'Flexibility', value: 'Within platform' }
-                    ],
-                    implications: [
-                        { title: 'Fast To Market', content: '6-9 months from brief to launch. Partner has done core R&D.' },
-                        { title: 'Lower Investment & Risk', content: 'Partner absorbs most R&D cost. You pay 50K-200K for customization.' },
-                        { title: 'Higher COGS Than Source', content: 'Partner charges for customization work. COGS 20-40% higher than basic Source, reducing margin by 10-15 percentage points. Trade-off: meaningful differentiation vs commodity.' },
-                        { title: 'Validation Before Scale', content: 'Perfect for test & learn. Can bring in-house for v2 if successful.' }
-                    ],
-                    warnings: [
-                        { content: 'You\'re dependent on partner\'s platform roadmap.' },
-                        { content: 'Customization has limits - platform must be 70%+ fit for your needs.' }
-                    ],
-                    clarification: {
-                        title: 'What "Partner & Adapt" Actually Means',
-                        content: [
-                            { point: 'Partner has existing technology platform', detail: 'They have a working product (e.g., pump mechanism, heating system, bottle design) that you will adapt, not build from scratch.' },
-                            { point: 'You CAN customize', detail: 'External design (housing, shape, ergonomics), branding (colors, logos, finishes), control interface (buttons, displays), and minor performance tweaking (heating curves, suction patterns).' },
-                            { point: 'You typically CANNOT customize', detail: 'Core functionality, fundamental technology, or completely different mechanisms. If the partner\'s platform is <70% fit, this approach won\'t work.' },
-                            { point: 'Customization scope', detail: 'New external tooling for housing/buttons + branding + packaging + minor firmware adjustments. Investment: 50K-200K. Timeline: 6-9 months.' },
-                            { point: 'When this won\'t work', detail: 'If you need completely different core technology or no existing platform fits your needs, consider Joint Development (co-create with partner) or Own & Build (develop yourself).' }
-                        ]
-                    },
-                    reconsider: 'If volumes exceed 250K units/year with strong conviction, build business case to Own for v2.'
+                    ]
                 },
                 source: {
                     title: 'Source & Specify',
                     subtitle: 'Buy smart, move fast, optimize margin',
-                    productBenefit: 'Delivers price-competitive presence with immediate availability that addresses articulated consumer needs in line with market expectations now.',
-                    rationale: `You ${answers.intent === 'tactical' ? 'need to fill tactical gap' : answers.intent === 'market-share' ? 'want market share' : 'prioritize speed and low risk'}, ${answers.volume === 'very-high' || answers.volume === 'high' ? 'expect high volumes' : 'have uncertain volumes'}, and ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'need speed' : 'want to minimize investment'}.`,
                     accepting: [
                         'Fastest to market - 3-6 months from supplier to first container',
                         'Lowest investment (20K-75K) and risk',
                         'Proven products with established manufacturing',
-                        answers.volume === 'very-high' || answers.volume === 'high' ? 'Excellent margin potential at your volumes' : 'Manageable inventory risk'
+                        'Excellent margin potential at high volumes'
                     ],
                     sacrificing: [
                         'Minimal control - spec within supplier capabilities',
@@ -2262,31 +2440,11 @@
                         { label: 'Timeline', value: '3-6 months' },
                         { label: 'Investment', value: '20K-75K' },
                         { label: 'Differentiation', value: 'Limited' }
-                    ],
-                    implications: [
-                        { title: 'Fastest To Market', content: '3-6 months from finding supplier to first container.' },
-                        { title: 'Lowest Investment', content: 'No R&D, minimal tooling. Inventory is your main risk.' },
-                        { title: 'Margin Depends On Volume', content: answers.volume === 'very-high' || answers.volume === 'high' ? 'At your volumes, excellent margins from scale + brand premium.' : 'Moderate margins with less negotiating power but also less risk.' },
-                        { title: 'Limited Differentiation', content: 'Can customize colors, packaging, minor features. Core product is off-shelf.' }
-                    ],
-                    warnings: [
-                        { content: answers.crowded === 'crowded' || answers.crowded === 'saturated' ? 'Crowded market means margin pressure. Focus on supply chain efficiency.' : 'Ensure competitors can\'t easily copy. Consider Partner & Adapt if differentiation matters.' },
-                        { content: 'Limited control over future improvements. Plan transition if category becomes strategic.' }
-                    ],
-                    reconsider: 'If category becomes strategic or volumes justify investment, consider Partner & Adapt or Own for v2.'
+                    ]
                 }
             };
             
             return recommendations[approach];
-        }
-        
-        function enterScreenshotMode() {
-            // Deprecated - replaced by downloadScreenshot
-            downloadScreenshot();
-        }
-        
-        function exitScreenshotMode() {
-            // Deprecated - no longer needed
         }
     </script>
 </body>
