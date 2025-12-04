@@ -887,7 +887,7 @@
     <div class="container">
         <h1>Innovation Sourcing Strategy Tool</h1>
         <p class="subtitle">Answer a few questions to find the right approach for your project</p>
-        <div class="version-footer">v1.6.1 | December 2025 | Cloud Sync</div>
+        <div class="version-footer">v1.7.0 | December 2025 | Cloud Sync</div>
         <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
         <div id="cloudStatus" style="position: absolute; top: 45px; right: 20px; font-size: 11px; padding: 3px 8px; border-radius: 4px; display: none;"></div>
         
@@ -957,7 +957,7 @@
         <!-- Question 1: Sub-Category -->
         <div class="question-container active" id="q1">
             <div class="question">What sub-category is this project for?</div>
-            <div class="hint">Be specific - decisions differ significantly within categories</div>
+            <div class="hint">Different products have different dynamics - this helps tailor the advice.</div>
             <select id="category">
                 <option value="">Select sub-category...</option>
                 <optgroup label="Bottle Feeding">
@@ -998,7 +998,7 @@
         <!-- Question 2: Strategic Intent -->
         <div class="question-container" id="q2">
             <div class="question">What's the primary goal of this project?</div>
-            <div class="hint">Be honest - there's no wrong answer, but it affects everything else</div>
+            <div class="hint">Pick what THIS project is really about - your goal shapes which approach makes sense.</div>
             <select id="intent">
                 <option value="">Select your goal...</option>
                 <option value="core-brand">Build/defend core brand differentiation</option>
@@ -1012,7 +1012,7 @@
         <!-- Question 3: Volume Expectations -->
         <div class="question-container" id="q3">
             <div class="question">What's your volume expectation?</div>
-            <div class="hint">Be realistic - this drives economics more than anything</div>
+            <div class="hint">Higher volumes justify bigger investments. Use realistic year 2-3 estimates, not optimistic forecasts.</div>
             <select id="volume">
                 <option value="">Select volume range...</option>
                 <option value="very-high">Very high (200K+ units/year) - bottles, soothers, refills</option>
@@ -1025,7 +1025,7 @@
         <!-- Question 4: Timeline -->
         <div class="question-container" id="q4">
             <div class="question">What's your timeline to market?</div>
-            <div class="hint">Consider retail cycles and competitive pressure</div>
+            <div class="hint">Faster timelines limit your options. Consider what retail windows and competition actually require.</div>
             <select id="timeline">
                 <option value="">Select timeline...</option>
                 <option value="urgent">Urgent - need to launch in &lt;6 months</option>
@@ -1038,7 +1038,7 @@
         <!-- Question 5: Market Position -->
         <div class="question-container" id="q5">
             <div class="question">What's your current position in this specific sub-category?</div>
-            <div class="hint">Where you are today affects risk appetite</div>
+            <div class="hint">Leaders can afford to invest and wait. Challengers and new entrants often need scrappier approaches.</div>
             <select id="position">
                 <option value="">Select position...</option>
                 <option value="leader">Market leader - strong share & brand presence</option>
@@ -1051,7 +1051,7 @@
         <!-- Question 6: Market Crowdedness -->
         <div class="question-container" id="q6">
             <div class="question">How crowded is this market space?</div>
-            <div class="hint">Competition affects how much differentiation matters</div>
+            <div class="hint">In crowded markets, you need to stand out. In open markets, moving fast to establish position matters more.</div>
             <select id="crowded">
                 <option value="">Select crowdedness...</option>
                 <option value="open">Relatively open - few credible players</option>
@@ -1064,7 +1064,7 @@
         <!-- Question 7: Capability Fit -->
         <div class="question-container" id="q7">
             <div class="question">Do you have in-house capability to develop this?</div>
-            <div class="hint">Capability includes R&D know-how, IP, compliance, manufacturing relationships</div>
+            <div class="hint">Can your team actually build this? Gaps in expertise push toward partnerships or sourcing.</div>
             <select id="capability">
                 <option value="">Select capability fit...</option>
                 <option value="strong">Strong - we have the expertise and IP</option>
@@ -1076,23 +1076,22 @@
         
         <!-- Question 8: IP Ownership -->
         <div class="question-container" id="q8">
-            <div class="question">For this sub-category, who owns the critical IP/patents?</div>
-            <div class="hint">This is a reality check - existing IP ownership constrains your options</div>
+            <div class="question">What's the IP situation in this space?</div>
+            <div class="hint">This determines your freedom to act. Existing IP relationships constrain which approaches are realistic.</div>
             <select id="ip">
-                <option value="">Select IP ownership...</option>
-                <option value="own-all">We own all key IP/patents (existing products)</option>
-                <option value="own-most">We own most, partner has some</option>
-                <option value="shared">Shared ownership / existing joint venture</option>
-                <option value="partner-owns">Partner owns most/all critical IP</option>
-                <option value="greenfield">Greenfield NPD - no IP yet, we want to develop it</option>
-                <option value="none">No significant IP exists (commodity/mature tech)</option>
+                <option value="">Select IP situation...</option>
+                <option value="own-all">We own the key IP - full freedom to develop however we want</option>
+                <option value="shared">Existing JV or shared IP - committed to working with this partner (e.g., Perfect Prep)</option>
+                <option value="partner-owns">Partner controls key tech - we'd need their cooperation to proceed</option>
+                <option value="greenfield">New territory - no IP exists yet, opportunity to develop and own it</option>
+                <option value="none">Commodity space - no meaningful IP, mature/standard technology</option>
             </select>
         </div>
         
         <!-- Question 9: Customization Level -->
         <div class="question-container" id="q9">
             <div class="question">What level of product customization do you need?</div>
-            <div class="hint">Be honest about what differentiation actually requires</div>
+            <div class="hint">More customization = more time and cost. Only go deep if differentiation truly demands it.</div>
             <select id="customization">
                 <option value="">Select customization level...</option>
                 <option value="branding">Branding & aesthetics only (colors, logo, packaging, finishes)</option>
@@ -1105,7 +1104,7 @@
         <!-- Question 10: Investment Appetite -->
         <div class="question-container" id="q10">
             <div class="question">What's your investment appetite for this project?</div>
-            <div class="hint">Consider both capex and risk if it doesn't work</div>
+            <div class="hint">Match spend to strategic importance. Not every project needs to be a big bet.</div>
             <select id="investment">
                 <option value="">Select investment appetite...</option>
                 <option value="high">High - strategic priority, prepared for 500K+ investment</option>
@@ -1526,9 +1525,6 @@
             // IP Ownership scoring
             if (answers.ip === 'own-all') {
                 scores.own += 3;
-            } else if (answers.ip === 'own-most') {
-                scores.own += 1;
-                scores.joint += 1;
             } else if (answers.ip === 'shared') {
                 scores.joint += 4;
                 scores.own -= 2;
@@ -1546,7 +1542,7 @@
                     scores.partner += 1;
                 }
             } else if (answers.ip === 'none') {
-                scores.source += 1;
+                scores.source += 2;
             }
             
             // Investment scoring
@@ -1627,11 +1623,11 @@
                 'some': 'Some',
                 'weak': 'Weak',
                 'none': 'None',
-                'own-all': 'We own all IP',
-                'own-most': 'We own most',
-                'shared': 'Shared / JV',
-                'partner-owns': 'Partner owns',
-                'greenfield': 'Greenfield NPD',
+                'own-all': 'We own key IP',
+                'shared': 'Shared/JV IP',
+                'partner-owns': 'Partner controls IP',
+                'greenfield': 'New territory',
+                'none': 'Commodity space',
                 'branding': 'Branding only',
                 'design': 'External design',
                 'performance': 'Performance tuning',
@@ -2365,11 +2361,326 @@
         }
         
         function downloadScreenshot() {
-            alert('Screenshot feature requires the full version. Use your browser\'s print or screenshot function.');
+            var btn = document.getElementById('screenshotBtn');
+            var loading = document.getElementById('screenshotLoading');
+            
+            btn.disabled = true;
+            loading.style.display = 'inline';
+            
+            var approach = calculateRecommendation();
+            var rec = getRecommendationData(approach);
+            var categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+            var dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            var notesEl = document.getElementById('challengeNotes');
+            var notes = notesEl ? notesEl.value : '';
+            var currentId = localStorage.getItem('current_assessment_id') || '';
+            
+            // Get scores for display
+            var scores = lastCalculatedScores;
+            var sorted = [
+                { key: 'own', label: 'Own', score: scores.own, color: '#10b981' },
+                { key: 'partner', label: 'Partner', score: scores.partner, color: '#3b82f6' },
+                { key: 'source', label: 'Source', score: scores.source, color: '#8b5cf6' },
+                { key: 'joint', label: 'Joint', score: scores.joint, color: '#f59e0b' }
+            ];
+            sorted.sort(function(a, b) { return b.score - a.score; });
+            
+            var winnerScore = sorted[0].score;
+            var isCloseCall = (winnerScore - sorted[1].score) <= 2;
+            
+            // Build scores HTML
+            var scoresHtml = '';
+            for (var i = 0; i < sorted.length; i++) {
+                var item = sorted[i];
+                var isWinner = i === 0;
+                scoresHtml += '<div style="display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: ' + (isWinner ? '#eef2ff' : 'white') + '; border-radius: 5px; border: 2px solid ' + (isWinner ? '#667eea' : '#e2e8f0') + ';"><div style="width: 10px; height: 10px; border-radius: 3px; background: ' + item.color + '; flex-shrink: 0;"></div><div style="flex: 1; font-size: 12px; font-weight: ' + (isWinner ? '700' : '500') + '; color: #2d3748;">' + item.label + '</div><div style="font-size: 14px; font-weight: 700; color: ' + item.color + ';">' + (item.score > 0 ? '+' : '') + item.score + '</div></div>';
+            }
+            
+            // Build accepting HTML
+            var acceptingHtml = '';
+            for (var j = 0; j < rec.accepting.length; j++) {
+                acceptingHtml += '<li style="padding: 6px 0; color: #2d3748; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 6px;">✓</span>' + rec.accepting[j] + '</li>';
+            }
+            
+            // Build sacrificing HTML
+            var sacrificingHtml = '';
+            for (var k = 0; k < rec.sacrificing.length; k++) {
+                sacrificingHtml += '<li style="padding: 6px 0; color: #2d3748; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 6px;">✗</span>' + rec.sacrificing[k] + '</li>';
+            }
+            
+            // Build tradeoffs HTML
+            var tradeoffsHtml = '';
+            for (var t = 0; t < rec.tradeoffs.length; t++) {
+                tradeoffsHtml += '<div style="font-size: 12px;"><strong style="color: #667eea;">' + rec.tradeoffs[t].label + ':</strong> <span style="color: #2d3748;">' + rec.tradeoffs[t].value + '</span></div>';
+            }
+            
+            var container = document.createElement('div');
+            container.className = 'screenshot-container';
+            container.innerHTML = '<div style="width: 1920px; height: 1080px; background: white; padding: 30px 55px 25px 45px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden;"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 3px solid #667eea; gap: 20px;"><div style="flex: 1; min-width: 0;"><h1 style="font-size: 30px; color: #2d3748; margin: 0 0 5px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ' + rec.title + '</h1><p style="font-size: 15px; color: #718096; margin: 0; line-height: 1.3;">' + rec.subtitle + '</p></div><div style="text-align: right; font-size: 13px; color: #4a5568; flex-shrink: 0; min-width: 240px;"><div style="margin-bottom: 2px;"><strong>Category:</strong> ' + categoryText + '</div><div style="margin-bottom: 2px;"><strong>Date:</strong> ' + dateText + '</div><div style="margin-bottom: 5px; font-size: 11px; color: #a0aec0;">ID: ' + currentId + '</div><div style="padding: 4px 10px; background: #667eea; color: white; border-radius: 5px; display: inline-block; font-weight: 600; font-size: 12px;">' + rec.title + '</div></div></div><div style="display: grid; grid-template-columns: 1fr 1fr 260px; gap: 22px; flex: 1; min-height: 0;"><div style="display: flex; flex-direction: column;"><h3 style="font-size: 16px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; display: flex; align-items: center;"><span style="color: #38a169; margin-right: 6px; font-size: 18px;">✓</span> What You\'re Accepting</h3><ul style="list-style: none; padding: 0; margin: 0; flex: 1;">' + acceptingHtml + '</ul></div><div style="display: flex; flex-direction: column;"><h3 style="font-size: 16px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; display: flex; align-items: center;"><span style="color: #e53e3e; margin-right: 6px; font-size: 18px;">✗</span> What You\'re Sacrificing</h3><ul style="list-style: none; padding: 0; margin: 0; flex: 1;">' + sacrificingHtml + '</ul></div><div style="background: #f7fafc; border-radius: 8px; padding: 12px; border: 2px solid #e2e8f0; display: flex; flex-direction: column;"><h4 style="font-size: 13px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; text-align: center;">📊 Decision Scores</h4><div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">' + scoresHtml + '</div>' + (isCloseCall ? '<div style="margin-top: 8px; padding: 6px; background: #fffbeb; border-radius: 5px; font-size: 10px; color: #92400e; text-align: center; border-left: 3px solid #f59e0b;"><strong>Close call</strong> - ' + sorted[1].label + ' ' + (winnerScore - sorted[1].score) + ' pts behind</div>' : '') + '</div></div><div style="background: #f7fafc; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #667eea; margin: 12px 0 10px 0;"><div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;"><h4 style="font-size: 13px; color: #2d3748; margin: 0; font-weight: 700;">Trade-Offs:</h4>' + tradeoffsHtml + '</div></div><div style="background: ' + (notes ? '#fffbeb' : '#f7fafc') + '; border-left: 4px solid ' + (notes ? '#f59e0b' : '#cbd5e0') + '; padding: 10px 14px; border-radius: 6px; margin-bottom: 10px;"><h4 style="font-size: 13px; color: #2d3748; margin: 0 0 4px 0; font-weight: 700; display: flex; align-items: center;"><span style="margin-right: 6px;">⚠️</span> Category Lead Notes / Challenge</h4><p style="font-size: 12px; line-height: 1.4; color: ' + (notes ? '#78350f' : '#718096') + '; margin: 0;">' + (notes || 'No disagreement with recommendation - proceeding as suggested by tool.') + '</p></div><div style="background: #1a202c; padding: 12px 18px; border-radius: 6px; display: flex; align-items: center; gap: 20px;"><div style="color: #a0aec0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;">🔍 Key Inputs:</div><div style="display: flex; flex-wrap: wrap; gap: 12px; flex: 1;"><div style="font-size: 11px; color: #e2e8f0;"><span style="color: #a0aec0;">Goal:</span> <span style="font-weight: 600;">' + (answers.intent || '') + '</span></div><div style="font-size: 11px; color: #e2e8f0;"><span style="color: #a0aec0;">Volume:</span> <span style="font-weight: 600;">' + (answers.volume || '') + '</span></div><div style="font-size: 11px; color: #e2e8f0;"><span style="color: #a0aec0;">Timeline:</span> <span style="font-weight: 600;">' + (answers.timeline || '') + '</span></div><div style="font-size: 11px; color: #e2e8f0;"><span style="color: #a0aec0;">Capability:</span> <span style="font-weight: 600;">' + (answers.capability || '') + '</span></div></div><div style="color: #718096; font-size: 10px; flex-shrink: 0;">v1.7.0 | Full audit in PDF</div></div></div>';
+            
+            document.body.appendChild(container);
+            
+            html2canvas(container, {
+                scale: 1.5,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: 1920,
+                height: 1080,
+                windowWidth: 1920
+            }).then(function(canvas) {
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        alert('Failed to create image');
+                        document.body.removeChild(container);
+                        btn.disabled = false;
+                        loading.style.display = 'none';
+                        return;
+                    }
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    var categorySlug = categoryText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    var dateSlug = new Date().toISOString().split('T')[0];
+                    a.download = 'sourcing-' + approach + '-' + categorySlug + '-' + dateSlug + '.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    document.body.removeChild(container);
+                    btn.disabled = false;
+                    loading.style.display = 'none';
+                }, 'image/png');
+            }).catch(function(err) {
+                console.error('Screenshot failed:', err);
+                alert('Screenshot failed. Please try using your browser\'s screenshot tool instead.');
+                document.body.removeChild(container);
+                btn.disabled = false;
+                loading.style.display = 'none';
+            });
         }
         
         function downloadPDF() {
-            alert('PDF export feature requires the full version. Use your browser\'s print function.');
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF('p', 'mm', 'a4');
+            
+            var approach = calculateRecommendation();
+            var rec = getRecommendationData(approach);
+            var categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+            var dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            var userNameEl = document.getElementById('userName');
+            var userName = userNameEl ? userNameEl.value : 'Not specified';
+            var notesEl = document.getElementById('challengeNotes');
+            var notes = notesEl ? notesEl.value : '';
+            var currentId = localStorage.getItem('current_assessment_id') || 'N/A';
+            
+            var pageWidth = 210;
+            var margin = 20;
+            var contentWidth = pageWidth - (margin * 2);
+            var y = 20;
+            
+            // Header
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 0, pageWidth, 45, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Sourcing Strategy Assessment', margin, 20);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text(rec.title + ' - ' + rec.subtitle, margin, 30);
+            
+            doc.setFontSize(10);
+            doc.text('ID: ' + currentId + ' | Generated: ' + dateText, margin, 40);
+            
+            y = 55;
+            
+            // Assessment Details Box
+            doc.setFillColor(247, 250, 252);
+            doc.rect(margin, y, contentWidth, 22, 'F');
+            doc.setDrawColor(226, 232, 240);
+            doc.rect(margin, y, contentWidth, 22, 'S');
+            
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ASSESSMENT DETAILS', margin + 5, y + 7);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.text('Sub-category: ' + categoryText + '   |   Assessed by: ' + userName + '   |   Recommendation: ' + rec.title, margin + 5, y + 16);
+            
+            y += 30;
+            
+            // Decision Scores
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DECISION SCORES', margin, y);
+            y += 7;
+            
+            var scores = lastCalculatedScores;
+            var approaches = [
+                { label: 'Own & Build', score: scores.own, key: 'own' },
+                { label: 'Joint Dev', score: scores.joint, key: 'joint' },
+                { label: 'Partner', score: scores.partner, key: 'partner' },
+                { label: 'Source', score: scores.source, key: 'source' }
+            ];
+            approaches.sort(function(a, b) { return b.score - a.score; });
+            
+            var boxWidth = (contentWidth - 15) / 4;
+            for (var i = 0; i < approaches.length; i++) {
+                var a = approaches[i];
+                var x = margin + (i * (boxWidth + 5));
+                var isWinner = a.key === approach;
+                
+                if (isWinner) {
+                    doc.setFillColor(238, 242, 255);
+                    doc.setDrawColor(102, 126, 234);
+                } else {
+                    doc.setFillColor(255, 255, 255);
+                    doc.setDrawColor(226, 232, 240);
+                }
+                doc.rect(x, y, boxWidth, 16, 'FD');
+                
+                doc.setTextColor(113, 128, 150);
+                doc.setFontSize(7);
+                doc.text(a.label, x + boxWidth/2, y + 5, { align: 'center' });
+                
+                doc.setTextColor(isWinner ? 102 : 45, isWinner ? 126 : 55, isWinner ? 234 : 72);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text((a.score > 0 ? '+' : '') + a.score.toString(), x + boxWidth/2, y + 12, { align: 'center' });
+            }
+            
+            y += 24;
+            
+            // Two columns: Accepting / Sacrificing
+            var colWidth = (contentWidth - 10) / 2;
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(16, 185, 129);
+            doc.text('WHAT YOU\'RE ACCEPTING', margin, y);
+            doc.setTextColor(239, 68, 68);
+            doc.text('WHAT YOU\'RE SACRIFICING', margin + colWidth + 10, y);
+            y += 5;
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(45, 55, 72);
+            
+            var maxItems = Math.max(rec.accepting.length, rec.sacrificing.length);
+            for (var j = 0; j < maxItems; j++) {
+                if (rec.accepting[j]) {
+                    var lines1 = doc.splitTextToSize('✓ ' + rec.accepting[j], colWidth - 5);
+                    doc.text(lines1, margin, y);
+                }
+                if (rec.sacrificing[j]) {
+                    var lines2 = doc.splitTextToSize('✗ ' + rec.sacrificing[j], colWidth - 5);
+                    doc.text(lines2, margin + colWidth + 10, y);
+                }
+                y += 10;
+            }
+            
+            y += 3;
+            
+            // Key Trade-offs
+            doc.setFillColor(247, 250, 252);
+            doc.rect(margin, y, contentWidth, 14, 'F');
+            doc.setDrawColor(102, 126, 234);
+            doc.setLineWidth(0.8);
+            doc.line(margin, y, margin, y + 14);
+            
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('KEY TRADE-OFFS: ', margin + 3, y + 5);
+            
+            doc.setFont('helvetica', 'normal');
+            var tradeoffParts = [];
+            for (var t = 0; t < rec.tradeoffs.length; t++) {
+                tradeoffParts.push(rec.tradeoffs[t].label + ': ' + rec.tradeoffs[t].value);
+            }
+            doc.text(tradeoffParts.join('  |  '), margin + 32, y + 5);
+            
+            y += 20;
+            
+            // Challenge Notes
+            if (notes) {
+                doc.setFillColor(255, 251, 235);
+                doc.rect(margin, y, contentWidth, 18, 'F');
+                doc.setDrawColor(245, 158, 11);
+                doc.setLineWidth(0.8);
+                doc.line(margin, y, margin, y + 18);
+                
+                doc.setTextColor(120, 53, 15);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('CATEGORY LEAD NOTES / CHALLENGE:', margin + 3, y + 5);
+                
+                doc.setFont('helvetica', 'normal');
+                var noteLines = doc.splitTextToSize(notes, contentWidth - 8);
+                doc.text(noteLines.slice(0, 2), margin + 3, y + 11);
+                
+                y += 24;
+            }
+            
+            // Decision Logic Section
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DECISION LOGIC - AUDIT TRAIL', margin, y);
+            y += 6;
+            
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(113, 128, 150);
+            doc.text('Each input contributed points. Green = positive, Red = negative. Highest total wins.', margin, y);
+            y += 5;
+            
+            // Input table
+            var inputLabels = {
+                intent: 'Strategic Goal',
+                volume: 'Volume',
+                timeline: 'Timeline',
+                position: 'Position',
+                crowded: 'Crowdedness',
+                capability: 'Capability',
+                ip: 'IP Ownership',
+                customization: 'Customization',
+                investment: 'Investment'
+            };
+            
+            doc.setFontSize(8);
+            doc.setTextColor(45, 55, 72);
+            
+            for (var key in answers) {
+                if (key !== 'category') {
+                    doc.setFont('helvetica', 'bold');
+                    doc.text((inputLabels[key] || key) + ':', margin, y);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(String(answers[key]), margin + 35, y);
+                    y += 5;
+                    
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                }
+            }
+            
+            // Footer
+            doc.setFontSize(7);
+            doc.setTextColor(113, 128, 150);
+            doc.text('Official assessment record. Tool v1.7.0 | Mayborn Innovation Sourcing Strategy Tool', margin, 287);
+            
+            // Save
+            var categorySlug = categoryText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            var dateSlug = new Date().toISOString().split('T')[0];
+            doc.save('sourcing-audit-' + approach + '-' + categorySlug + '-' + dateSlug + '.pdf');
         }
         
         function getRecommendationData(approach) {
