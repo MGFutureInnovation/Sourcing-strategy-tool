@@ -887,7 +887,7 @@
     <div class="container">
         <h1>Innovation Sourcing Strategy Tool</h1>
         <p class="subtitle">Answer a few questions to find the right approach for your project</p>
-        <div class="version-footer">v1.6.0 | December 2025 | Cloud Sync</div>
+        <div class="version-footer">v1.6.1 | December 2025 | Cloud Sync</div>
         <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
         <div id="cloudStatus" style="position: absolute; top: 45px; right: 20px; font-size: 11px; padding: 3px 8px; border-radius: 4px; display: none;"></div>
         
@@ -1228,16 +1228,43 @@
     </div>
     
     <script>
-        let currentQuestion = 1;
-        const totalQuestions = 10;
-        const answers = {};
+        // =============================================
+        // CLOUD SYNC CONFIGURATION
+        // =============================================
+        var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjg3x8zTN7qNe_y9fStGVfVRnIlBNVLLZ-JEa8h94tO_940TMs8D8xSY_yiDOXcUzy/exec';
+        
+        function sendToCloud(data) {
+            if (!GOOGLE_SCRIPT_URL) return;
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', GOOGLE_SCRIPT_URL, true);
+                xhr.setRequestHeader('Content-Type', 'text/plain');
+                xhr.send(JSON.stringify(data));
+                console.log('Sent to cloud');
+            } catch(e) {
+                console.log('Cloud sync failed', e);
+            }
+        }
+        
+        // Helper function to safely get element value
+        function getElementValue(id) {
+            var el = document.getElementById(id);
+            return el ? el.value : '';
+        }
+        
+        // =============================================
+        // MAIN APPLICATION CODE
+        // =============================================
+        var currentQuestion = 1;
+        var totalQuestions = 10;
+        var answers = {};
         
         // Store scores globally for radar chart
-        let lastCalculatedScores = null;
+        var lastCalculatedScores = null;
         
         // Progress saving functionality
         function saveProgress() {
-            const progress = {
+            var progress = {
                 currentQuestion: currentQuestion,
                 answers: answers,
                 timestamp: new Date().toISOString()
@@ -1251,12 +1278,12 @@
         
         function restoreProgress() {
             try {
-                const saved = localStorage.getItem('sourcingToolProgress');
+                var saved = localStorage.getItem('sourcingToolProgress');
                 if (saved) {
-                    const progress = JSON.parse(saved);
+                    var progress = JSON.parse(saved);
                     // Check if saved within last 7 days
-                    const savedDate = new Date(progress.timestamp);
-                    const daysSince = (new Date() - savedDate) / (1000 * 60 * 60 * 24);
+                    var savedDate = new Date(progress.timestamp);
+                    var daysSince = (new Date() - savedDate) / (1000 * 60 * 60 * 24);
                     
                     if (daysSince < 7 && progress.currentQuestion && progress.currentQuestion < totalQuestions) {
                         if (confirm('You have an unfinished assessment from ' + savedDate.toLocaleDateString() + '. Would you like to continue where you left off?')) {
@@ -1280,165 +1307,42 @@
             }
         }
         
-        // EmailJS Configuration and Email Notification Function
-        
-        // GOOGLE SHEETS BACKEND - Set URL to enable cloud storage
-        var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjg3x8zTN7qNe_y9fStGVfVRnIlBNVLLZ-JEa8h94tO_940TMs8D8xSY_yiDOXcUzy/exec';
-        
-        // Submit assessment to Google Sheets
-        async function submitToCloud(assessmentData) {
-            if (!GOOGLE_SCRIPT_URL) {
-                console.log('Cloud storage not configured - using localStorage only');
-                return { success: false, reason: 'not_configured' };
-            }
-            
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(assessmentData)
-                });
-                
-                console.log('Assessment submitted to cloud');
-                return { success: true };
-                
-            } catch (error) {
-                console.warn('Cloud submission failed:', error);
-                return { success: false, reason: 'network_error', error: error.message };
-            }
-        }
-        
-        // Update challenge notes in cloud
-        async function updateCloudNotes(assessmentId, notes) {
-            if (!GOOGLE_SCRIPT_URL) return;
-            
-            var assessments = getAssessments();
-            var assessment = assessments.find(function(a) { return a.id === assessmentId; });
-            if (!assessment) return;
-            
-            assessment.challengeNotes = notes;
-            await submitToCloud(formatForCloud(assessment));
-        }
-        
-        // Format assessment data for cloud submission
-        function formatForCloud(assessment) {
-            var approaches = {
-                own: 'Own & Build',
-                joint: 'Joint Development',
-                partner: 'Partner & Adapt',
-                source: 'Source & Specify'
-            };
-            
-            return {
-                assessmentId: assessment.id,
-                userName: document.getElementById('userName') ? document.getElementById('userName').value : 'Anonymous',
-                category: assessment.category,
-                recommendation: approaches[assessment.approach] || assessment.approach,
-                scores: assessment.scores || lastCalculatedScores,
-                answers: assessment.answers,
-                challengeNotes: assessment.challengeNotes || ''
-            };
-        }
-        
-        const EMAIL_CONFIG = {
-            enabled: true,
+        // EmailJS Configuration (disabled by default)
+        var EMAIL_CONFIG = {
+            enabled: false,
             serviceId: 'YOUR_SERVICE_ID',
             templateId: 'YOUR_TEMPLATE_ID',
             publicKey: 'YOUR_PUBLIC_KEY',
             adminEmail: 'jhume@mayborngroup.com'
         };
         
-        function initializeEmailJS() {
-            if (!EMAIL_CONFIG.enabled) return false;
-            
-            if (EMAIL_CONFIG.serviceId === 'YOUR_SERVICE_ID' || 
-                EMAIL_CONFIG.templateId === 'YOUR_TEMPLATE_ID' ||
-                EMAIL_CONFIG.publicKey === 'YOUR_PUBLIC_KEY') {
-                console.log('EmailJS not configured yet - email notifications disabled');
-                return false;
-            }
-            
-            try {
-                emailjs.init(EMAIL_CONFIG.publicKey);
-                return true;
-            } catch (e) {
-                console.warn('EmailJS initialization failed:', e);
-                return false;
-            }
-        }
-        
-        function sendAdminNotification(assessment, recommendation) {
-            if (!EMAIL_CONFIG.enabled || !initializeEmailJS()) {
-                return;
-            }
-            
-            const userName = document.getElementById('userName')?.value || 'Anonymous User';
-            const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
-            const dateText = new Date().toLocaleDateString('en-GB', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            
-            const emailParams = {
-                to_email: EMAIL_CONFIG.adminEmail,
-                user_name: userName,
-                category: categoryText,
-                recommendation: recommendation.title,
-                recommendation_subtitle: recommendation.subtitle,
-                date: dateText,
-                strategic_intent: answers.intent || 'Not specified',
-                expected_volume: answers.volume || 'Not specified',
-                timeline: answers.timeline || 'Not specified',
-                capability: answers.capability || 'Not specified',
-                investment: answers.investment || 'Not specified',
-                challenge_notes: assessment.challengeNotes || 'None - user agrees with recommendation',
-                tradeoffs: recommendation.tradeoffs.map(t => `${t.label}: ${t.value}`).join(' | '),
-                accepting: recommendation.accepting.slice(0, 3).join('; '),
-                sacrificing: recommendation.sacrificing.slice(0, 3).join('; ')
-            };
-            
-            emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, emailParams)
-                .then(function(response) {
-                    console.log('Admin notification sent successfully', response.status, response.text);
-                })
-                .catch(function(error) {
-                    console.warn('Failed to send admin notification:', error);
-                });
-        }
-        
         // Question elements
-        const categorySelect = document.getElementById('category');
-        const intentSelect = document.getElementById('intent');
-        const volumeSelect = document.getElementById('volume');
-        const timelineSelect = document.getElementById('timeline');
-        const positionSelect = document.getElementById('position');
-        const crowdedSelect = document.getElementById('crowded');
-        const capabilitySelect = document.getElementById('capability');
-        const ipSelect = document.getElementById('ip');
-        const customizationSelect = document.getElementById('customization');
-        const investmentSelect = document.getElementById('investment');
+        var categorySelect = document.getElementById('category');
+        var intentSelect = document.getElementById('intent');
+        var volumeSelect = document.getElementById('volume');
+        var timelineSelect = document.getElementById('timeline');
+        var positionSelect = document.getElementById('position');
+        var crowdedSelect = document.getElementById('crowded');
+        var capabilitySelect = document.getElementById('capability');
+        var ipSelect = document.getElementById('ip');
+        var customizationSelect = document.getElementById('customization');
+        var investmentSelect = document.getElementById('investment');
         
         // Navigation
-        const nextBtn = document.getElementById('nextBtn');
-        const backBtn = document.getElementById('backBtn');
+        var nextBtn = document.getElementById('nextBtn');
+        var backBtn = document.getElementById('backBtn');
         
         // Add event listeners
-        categorySelect.addEventListener('change', () => handleAnswer('category', categorySelect.value));
-        intentSelect.addEventListener('change', () => handleAnswer('intent', intentSelect.value));
-        volumeSelect.addEventListener('change', () => handleAnswer('volume', volumeSelect.value));
-        timelineSelect.addEventListener('change', () => handleAnswer('timeline', timelineSelect.value));
-        positionSelect.addEventListener('change', () => handleAnswer('position', positionSelect.value));
-        crowdedSelect.addEventListener('change', () => handleAnswer('crowded', crowdedSelect.value));
-        capabilitySelect.addEventListener('change', () => handleAnswer('capability', capabilitySelect.value));
-        ipSelect.addEventListener('change', () => handleAnswer('ip', ipSelect.value));
-        customizationSelect.addEventListener('change', () => handleAnswer('customization', customizationSelect.value));
-        investmentSelect.addEventListener('change', () => handleAnswer('investment', investmentSelect.value));
+        categorySelect.addEventListener('change', function() { handleAnswer('category', categorySelect.value); });
+        intentSelect.addEventListener('change', function() { handleAnswer('intent', intentSelect.value); });
+        volumeSelect.addEventListener('change', function() { handleAnswer('volume', volumeSelect.value); });
+        timelineSelect.addEventListener('change', function() { handleAnswer('timeline', timelineSelect.value); });
+        positionSelect.addEventListener('change', function() { handleAnswer('position', positionSelect.value); });
+        crowdedSelect.addEventListener('change', function() { handleAnswer('crowded', crowdedSelect.value); });
+        capabilitySelect.addEventListener('change', function() { handleAnswer('capability', capabilitySelect.value); });
+        ipSelect.addEventListener('change', function() { handleAnswer('ip', ipSelect.value); });
+        customizationSelect.addEventListener('change', function() { handleAnswer('customization', customizationSelect.value); });
+        investmentSelect.addEventListener('change', function() { handleAnswer('investment', investmentSelect.value); });
         
         nextBtn.addEventListener('click', nextQuestion);
         backBtn.addEventListener('click', previousQuestion);
@@ -1448,7 +1352,7 @@
             document.getElementById('assessmentContent').style.display = 'block';
             
             if (restoreProgress()) {
-                for (let i = 1; i < currentQuestion; i++) {
+                for (var i = 1; i < currentQuestion; i++) {
                     document.getElementById('q' + i).classList.remove('active');
                 }
                 document.getElementById('q' + currentQuestion).classList.add('active');
@@ -1467,7 +1371,7 @@
                 updateProgress();
                 updateNavigation();
                 
-                const currentSelect = getCurrentSelect();
+                var currentSelect = getCurrentSelect();
                 nextBtn.disabled = !currentSelect.value;
             }
         }
@@ -1492,7 +1396,7 @@
                 updateProgress();
                 updateNavigation();
                 
-                const currentSelect = getCurrentSelect();
+                var currentSelect = getCurrentSelect();
                 nextBtn.disabled = !currentSelect.value;
             } else {
                 showRecommendation();
@@ -1507,19 +1411,19 @@
                 updateProgress();
                 updateNavigation();
                 
-                const currentSelect = getCurrentSelect();
+                var currentSelect = getCurrentSelect();
                 nextBtn.disabled = !currentSelect.value;
             }
         }
         
         function getCurrentSelect() {
-            const selects = [null, categorySelect, intentSelect, volumeSelect, timelineSelect, 
+            var selects = [null, categorySelect, intentSelect, volumeSelect, timelineSelect, 
                            positionSelect, crowdedSelect, capabilitySelect, ipSelect, customizationSelect, investmentSelect];
             return selects[currentQuestion];
         }
         
         function updateProgress() {
-            const progress = (currentQuestion / totalQuestions) * 100;
+            var progress = (currentQuestion / totalQuestions) * 100;
             document.getElementById('progressFill').style.width = progress + '%';
         }
         
@@ -1529,7 +1433,7 @@
         }
         
         function calculateRecommendation() {
-            const scores = {
+            var scores = {
                 own: 0,
                 joint: 0,
                 partner: 0,
@@ -1673,10 +1577,10 @@
             }
             
             // Store scores globally for radar chart
-            lastCalculatedScores = {...scores};
+            lastCalculatedScores = {own: scores.own, joint: scores.joint, partner: scores.partner, source: scores.source};
             
             // Find highest score
-            const maxScore = Math.max(scores.own, scores.joint, scores.partner, scores.source);
+            var maxScore = Math.max(scores.own, scores.joint, scores.partner, scores.source);
             
             if (scores.own === maxScore) return 'own';
             if (scores.joint === maxScore) return 'joint';
@@ -1686,7 +1590,7 @@
         
         // Generate decision tree breakdown HTML
         function generateDecisionTree(scores, winner) {
-            const inputLabels = {
+            var inputLabels = {
                 intent: 'Strategic Goal',
                 volume: 'Volume Expectation',
                 timeline: 'Timeline',
@@ -1698,7 +1602,7 @@
                 investment: 'Investment Appetite'
             };
             
-            const valueLabels = {
+            var valueLabels = {
                 'core-brand': 'Build/defend core brand',
                 'test-learn': 'Test & learn',
                 'tactical': 'Fill tactical gap',
@@ -1735,7 +1639,7 @@
             };
             
             // Calculate impacts for each input
-            const impacts = [];
+            var impacts = [];
             
             if (answers.intent === 'core-brand') {
                 impacts.push({ input: 'intent', chips: [{ approach: 'Own', delta: +3 }, { approach: 'Joint', delta: +2 }] });
@@ -1765,24 +1669,6 @@
                 impacts.push({ input: 'timeline', chips: [{ approach: 'Own', delta: +2 }, { approach: 'Joint', delta: +1 }] });
             }
             
-            if (answers.position === 'leader') {
-                impacts.push({ input: 'position', chips: [{ approach: 'Own', delta: +3 }] });
-            } else if (answers.position === 'player') {
-                impacts.push({ input: 'position', chips: [{ approach: 'Own', delta: +1 }] });
-            } else if (answers.position === 'new') {
-                impacts.push({ input: 'position', chips: [{ approach: 'Partner', delta: +2 }, { approach: 'Source', delta: +1 }] });
-            }
-            
-            if (answers.crowded === 'open') {
-                impacts.push({ input: 'crowded', chips: [{ approach: 'Own', delta: +2 }] });
-            } else if (answers.crowded === 'crowded' || answers.crowded === 'saturated') {
-                if (answers.position === 'leader' || answers.position === 'player') {
-                    impacts.push({ input: 'crowded', chips: [{ approach: 'Own', delta: +1 }] });
-                } else {
-                    impacts.push({ input: 'crowded', chips: [{ approach: 'Source', delta: +2 }, { approach: 'Partner', delta: +1 }] });
-                }
-            }
-            
             if (answers.capability === 'strong') {
                 impacts.push({ input: 'capability', chips: [{ approach: 'Own', delta: +4 }] });
             } else if (answers.capability === 'some') {
@@ -1793,94 +1679,40 @@
                 impacts.push({ input: 'capability', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Source', delta: +2 }, { approach: 'Own', delta: -2 }] });
             }
             
-            if (answers.ip === 'own-all') {
-                impacts.push({ input: 'ip', chips: [{ approach: 'Own', delta: +3 }] });
-            } else if (answers.ip === 'own-most') {
-                impacts.push({ input: 'ip', chips: [{ approach: 'Own', delta: +1 }, { approach: 'Joint', delta: +1 }] });
-            } else if (answers.ip === 'shared') {
-                impacts.push({ input: 'ip', chips: [{ approach: 'Joint', delta: +4 }, { approach: 'Own', delta: -2 }] });
-            } else if (answers.ip === 'partner-owns') {
-                impacts.push({ input: 'ip', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Own', delta: -3 }] });
-            } else if (answers.ip === 'greenfield') {
-                if (answers.capability === 'strong') {
-                    impacts.push({ input: 'ip', chips: [{ approach: 'Own', delta: +3 }] });
-                } else if (answers.capability === 'some') {
-                    impacts.push({ input: 'ip', chips: [{ approach: 'Joint', delta: +2 }, { approach: 'Own', delta: +1 }] });
-                } else {
-                    impacts.push({ input: 'ip', chips: [{ approach: 'Joint', delta: +2 }, { approach: 'Partner', delta: +1 }] });
+            var rowsHtml = '';
+            for (var i = 0; i < impacts.length; i++) {
+                var impact = impacts[i];
+                var inputValue = answers[impact.input];
+                var displayValue = valueLabels[inputValue] || inputValue;
+                var chipsHtml = '';
+                for (var j = 0; j < impact.chips.length; j++) {
+                    var chip = impact.chips[j];
+                    chipsHtml += '<span class="impact-chip ' + (chip.delta > 0 ? 'impact-positive' : 'impact-negative') + '">' + chip.approach + ' ' + (chip.delta > 0 ? '+' : '') + chip.delta + '</span>';
                 }
-            } else if (answers.ip === 'none') {
-                impacts.push({ input: 'ip', chips: [{ approach: 'Source', delta: +1 }] });
-            }
-            
-            if (answers.investment === 'high') {
-                impacts.push({ input: 'investment', chips: [{ approach: 'Own', delta: +2 }, { approach: 'Joint', delta: +1 }] });
-            } else if (answers.investment === 'minimal' || answers.investment === 'low') {
-                impacts.push({ input: 'investment', chips: [{ approach: 'Source', delta: +2 }, { approach: 'Partner', delta: +2 }, { approach: 'Own', delta: -2 }] });
-            }
-            
-            if (answers.customization === 'branding') {
-                impacts.push({ input: 'customization', chips: [{ approach: 'Source', delta: +3 }, { approach: 'Partner', delta: -2 }] });
-            } else if (answers.customization === 'design') {
-                impacts.push({ input: 'customization', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Source', delta: -1 }] });
-            } else if (answers.customization === 'performance') {
-                impacts.push({ input: 'customization', chips: [{ approach: 'Partner', delta: +2 }, { approach: 'Joint', delta: +2 }, { approach: 'Source', delta: -2 }] });
-            } else if (answers.customization === 'core-tech') {
-                impacts.push({ input: 'customization', chips: [{ approach: 'Joint', delta: +3 }, { approach: 'Own', delta: +2 }, { approach: 'Partner', delta: -2 }] });
-            }
-            
-            const rowsHtml = impacts.map(impact => {
-                const inputValue = answers[impact.input];
-                const displayValue = valueLabels[inputValue] || inputValue;
-                const chipsHtml = impact.chips.map(chip => 
-                    `<span class="impact-chip ${chip.delta > 0 ? 'impact-positive' : 'impact-negative'}">${chip.approach} ${chip.delta > 0 ? '+' : ''}${chip.delta}</span>`
-                ).join('');
                 
-                return `
-                    <div class="scoring-row">
-                        <div class="scoring-input"><strong>${inputLabels[impact.input]}:</strong> ${displayValue}</div>
-                        <div class="scoring-impact">${chipsHtml}</div>
-                    </div>
-                `;
-            }).join('');
+                rowsHtml += '<div class="scoring-row"><div class="scoring-input"><strong>' + inputLabels[impact.input] + ':</strong> ' + displayValue + '</div><div class="scoring-impact">' + chipsHtml + '</div></div>';
+            }
             
-            const approaches = [
+            var approaches = [
                 { key: 'own', label: 'Own & Build', score: scores.own },
                 { key: 'joint', label: 'Joint Dev', score: scores.joint },
                 { key: 'partner', label: 'Partner', score: scores.partner },
                 { key: 'source', label: 'Source', score: scores.source }
             ];
             
-            const totalsHtml = approaches.map(a => `
-                <div class="total-item ${a.key === winner ? 'winner' : ''}">
-                    <div class="total-label">${a.label}</div>
-                    <div class="total-score" style="color: ${a.key === winner ? '#667eea' : '#2d3748'};">${a.score > 0 ? '+' : ''}${a.score}</div>
-                </div>
-            `).join('');
+            var totalsHtml = '';
+            for (var k = 0; k < approaches.length; k++) {
+                var a = approaches[k];
+                totalsHtml += '<div class="total-item ' + (a.key === winner ? 'winner' : '') + '"><div class="total-label">' + a.label + '</div><div class="total-score" style="color: ' + (a.key === winner ? '#667eea' : '#2d3748') + ';">' + (a.score > 0 ? '+' : '') + a.score + '</div></div>';
+            }
             
-            return `
-                <div class="decision-tree">
-                    <div class="decision-tree-header" onclick="toggleDecisionTree()">
-                        <h4>🔍 Decision Logic (Click to expand for audit trail)</h4>
-                        <span class="decision-tree-toggle" id="treeToggle">▼</span>
-                    </div>
-                    <div class="decision-tree-content" id="treeContent">
-                        <div style="font-size: 13px; color: #718096; margin-bottom: 12px;">
-                            Each input contributed points to one or more approaches. Highest total score wins.
-                        </div>
-                        ${rowsHtml}
-                        <div class="scoring-totals">
-                            ${totalsHtml}
-                        </div>
-                    </div>
-                </div>
-            `;
+            return '<div class="decision-tree"><div class="decision-tree-header" onclick="toggleDecisionTree()"><h4>🔍 Decision Logic (Click to expand for audit trail)</h4><span class="decision-tree-toggle" id="treeToggle">▼</span></div><div class="decision-tree-content" id="treeContent"><div style="font-size: 13px; color: #718096; margin-bottom: 12px;">Each input contributed points to one or more approaches. Highest total score wins.</div>' + rowsHtml + '<div class="scoring-totals">' + totalsHtml + '</div></div></div>';
         }
         
         function toggleDecisionTree() {
-            const content = document.getElementById('treeContent');
-            const toggle = document.getElementById('treeToggle');
-            const isOpen = content.classList.contains('open');
+            var content = document.getElementById('treeContent');
+            var toggle = document.getElementById('treeToggle');
+            var isOpen = content.classList.contains('open');
             
             if (isOpen) {
                 content.classList.remove('open');
@@ -1890,235 +1722,20 @@
                 toggle.classList.add('open');
             }
         }
-        
-        // PDF Export Function
-        function downloadPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
-            
-            const approach = calculateRecommendation();
-            const rec = getRecommendationData(approach);
-            const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
-            const dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const userName = document.getElementById('userName')?.value || 'Not specified';
-            const notes = document.getElementById('challengeNotes')?.value || '';
-            const currentId = localStorage.getItem('current_assessment_id') || 'N/A';
-            
-            const pageWidth = 210;
-            const margin = 20;
-            const contentWidth = pageWidth - (margin * 2);
-            let y = 20;
-            
-            // Header
-            doc.setFillColor(102, 126, 234);
-            doc.rect(0, 0, pageWidth, 45, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Sourcing Strategy Assessment', margin, 20);
-            
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'normal');
-            doc.text(rec.title + ' - ' + rec.subtitle, margin, 30);
-            
-            doc.setFontSize(10);
-            doc.text('ID: ' + currentId + ' | Generated: ' + dateText, margin, 40);
-            
-            y = 55;
-            
-            // Assessment Details Box
-            doc.setFillColor(247, 250, 252);
-            doc.rect(margin, y, contentWidth, 22, 'F');
-            doc.setDrawColor(226, 232, 240);
-            doc.rect(margin, y, contentWidth, 22, 'S');
-            
-            doc.setTextColor(45, 55, 72);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text('ASSESSMENT DETAILS', margin + 5, y + 7);
-            
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.text('Sub-category: ' + categoryText + '   |   Assessed by: ' + userName + '   |   Recommendation: ' + rec.title, margin + 5, y + 16);
-            
-            y += 30;
-            
-            // Decision Scores
-            doc.setTextColor(45, 55, 72);
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('DECISION SCORES', margin, y);
-            y += 7;
-            
-            const scores = lastCalculatedScores;
-            const approaches = [
-                { label: 'Own & Build', score: scores.own, key: 'own' },
-                { label: 'Joint Dev', score: scores.joint, key: 'joint' },
-                { label: 'Partner', score: scores.partner, key: 'partner' },
-                { label: 'Source', score: scores.source, key: 'source' }
-            ].sort((a, b) => b.score - a.score);
-            
-            const boxWidth = (contentWidth - 15) / 4;
-            approaches.forEach((a, i) => {
-                const x = margin + (i * (boxWidth + 5));
-                const isWinner = a.key === approach;
-                
-                if (isWinner) {
-                    doc.setFillColor(238, 242, 255);
-                    doc.setDrawColor(102, 126, 234);
-                } else {
-                    doc.setFillColor(255, 255, 255);
-                    doc.setDrawColor(226, 232, 240);
-                }
-                doc.rect(x, y, boxWidth, 16, 'FD');
-                
-                doc.setTextColor(113, 128, 150);
-                doc.setFontSize(7);
-                doc.text(a.label, x + boxWidth/2, y + 5, { align: 'center' });
-                
-                doc.setTextColor(isWinner ? 102 : 45, isWinner ? 126 : 55, isWinner ? 234 : 72);
-                doc.setFontSize(12);
-                doc.setFont('helvetica', 'bold');
-                doc.text((a.score > 0 ? '+' : '') + a.score.toString(), x + boxWidth/2, y + 12, { align: 'center' });
-            });
-            
-            y += 24;
-            
-            // Two columns: Accepting / Sacrificing
-            const colWidth = (contentWidth - 10) / 2;
-            
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9);
-            doc.setTextColor(16, 185, 129);
-            doc.text('WHAT YOU\'RE ACCEPTING', margin, y);
-            doc.setTextColor(239, 68, 68);
-            doc.text('WHAT YOU\'RE SACRIFICING', margin + colWidth + 10, y);
-            y += 5;
-            
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
-            doc.setTextColor(45, 55, 72);
-            
-            const maxItems = Math.max(rec.accepting.length, rec.sacrificing.length);
-            for (let i = 0; i < maxItems; i++) {
-                if (rec.accepting[i]) {
-                    const lines = doc.splitTextToSize('✓ ' + rec.accepting[i], colWidth - 5);
-                    doc.text(lines, margin, y);
-                }
-                if (rec.sacrificing[i]) {
-                    const lines = doc.splitTextToSize('✗ ' + rec.sacrificing[i], colWidth - 5);
-                    doc.text(lines, margin + colWidth + 10, y);
-                }
-                y += 10;
-            }
-            
-            y += 3;
-            
-            // Key Trade-offs
-            doc.setFillColor(247, 250, 252);
-            doc.rect(margin, y, contentWidth, 14, 'F');
-            doc.setDrawColor(102, 126, 234);
-            doc.setLineWidth(0.8);
-            doc.line(margin, y, margin, y + 14);
-            
-            doc.setTextColor(45, 55, 72);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'bold');
-            doc.text('KEY TRADE-OFFS: ', margin + 3, y + 5);
-            
-            doc.setFont('helvetica', 'normal');
-            const tradeoffText = rec.tradeoffs.map(t => t.label + ': ' + t.value).join('  |  ');
-            doc.text(tradeoffText, margin + 32, y + 5);
-            
-            y += 20;
-            
-            // Challenge Notes
-            if (notes) {
-                doc.setFillColor(255, 251, 235);
-                doc.rect(margin, y, contentWidth, 18, 'F');
-                doc.setDrawColor(245, 158, 11);
-                doc.setLineWidth(0.8);
-                doc.line(margin, y, margin, y + 18);
-                
-                doc.setTextColor(120, 53, 15);
-                doc.setFontSize(8);
-                doc.setFont('helvetica', 'bold');
-                doc.text('CATEGORY LEAD NOTES / CHALLENGE:', margin + 3, y + 5);
-                
-                doc.setFont('helvetica', 'normal');
-                const noteLines = doc.splitTextToSize(notes, contentWidth - 8);
-                doc.text(noteLines.slice(0, 2), margin + 3, y + 11);
-                
-                y += 24;
-            }
-            
-            // Decision Logic Section
-            doc.setTextColor(45, 55, 72);
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('DECISION LOGIC - AUDIT TRAIL', margin, y);
-            y += 6;
-            
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(113, 128, 150);
-            doc.text('Each input contributed points. Green = positive, Red = negative. Highest total wins.', margin, y);
-            y += 5;
-            
-            // Input table
-            const inputLabels = {
-                intent: 'Strategic Goal',
-                volume: 'Volume',
-                timeline: 'Timeline',
-                position: 'Position',
-                crowded: 'Crowdedness',
-                capability: 'Capability',
-                ip: 'IP Ownership',
-                customization: 'Customization',
-                investment: 'Investment'
-            };
-            
-            doc.setFontSize(8);
-            doc.setTextColor(45, 55, 72);
-            
-            Object.entries(answers).filter(([k]) => k !== 'category').forEach(([key, value]) => {
-                doc.setFont('helvetica', 'bold');
-                doc.text(inputLabels[key] + ':', margin, y);
-                doc.setFont('helvetica', 'normal');
-                doc.text(String(value), margin + 35, y);
-                y += 5;
-                
-                if (y > 270) {
-                    doc.addPage();
-                    y = 20;
-                }
-            });
-            
-            // Footer
-            doc.setFontSize(7);
-            doc.setTextColor(113, 128, 150);
-            doc.text('Official assessment record. Tool v1.5.0 | Mayborn Innovation Sourcing Strategy Tool', margin, 287);
-            
-            // Save
-            const categorySlug = categoryText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            const dateSlug = new Date().toISOString().split('T')[0];
-            doc.save(`sourcing-audit-${approach}-${categorySlug}-${dateSlug}.pdf`);
-        }
 
         // Generate SVG radar chart
         function generateRadarChart(scores, winner) {
-            const size = 280;
-            const center = size / 2;
-            const maxRadius = 100;
+            var size = 280;
+            var center = size / 2;
+            var maxRadius = 100;
             
             // Normalize scores to 0-100 range for display
-            const allScores = Object.values(scores);
-            const minScore = Math.min(...allScores);
-            const maxScore = Math.max(...allScores);
-            const range = maxScore - minScore || 1;
+            var allScores = [scores.own, scores.joint, scores.partner, scores.source];
+            var minScore = Math.min.apply(null, allScores);
+            var maxScore = Math.max.apply(null, allScores);
+            var range = maxScore - minScore || 1;
             
-            const normalizedScores = {
+            var normalizedScores = {
                 own: ((scores.own - minScore) / range) * 80 + 20,
                 joint: ((scores.joint - minScore) / range) * 80 + 20,
                 partner: ((scores.partner - minScore) / range) * 80 + 20,
@@ -2126,7 +1743,7 @@
             };
             
             // Four axes at 0, 90, 180, 270 degrees (top, right, bottom, left)
-            const axes = [
+            var axes = [
                 { key: 'own', label: 'Own & Build', angle: -90, color: '#10b981' },
                 { key: 'partner', label: 'Partner & Adapt', angle: 0, color: '#3b82f6' },
                 { key: 'source', label: 'Source & Specify', angle: 90, color: '#8b5cf6' },
@@ -2134,68 +1751,58 @@
             ];
             
             // Calculate polygon points
-            const points = axes.map(axis => {
-                const rad = (axis.angle * Math.PI) / 180;
-                const value = normalizedScores[axis.key] / 100;
-                return {
+            var points = [];
+            for (var i = 0; i < axes.length; i++) {
+                var axis = axes[i];
+                var rad = (axis.angle * Math.PI) / 180;
+                var value = normalizedScores[axis.key] / 100;
+                points.push({
                     x: center + Math.cos(rad) * maxRadius * value,
                     y: center + Math.sin(rad) * maxRadius * value
-                };
-            });
+                });
+            }
             
-            const polygonPoints = points.map(p => `${p.x},${p.y}`).join(' ');
+            var polygonPoints = points.map(function(p) { return p.x + ',' + p.y; }).join(' ');
             
             // Generate grid circles
-            const gridCircles = [0.25, 0.5, 0.75, 1].map(ratio => 
-                `<circle cx="${center}" cy="${center}" r="${maxRadius * ratio}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`
-            ).join('');
+            var gridCircles = '';
+            var ratios = [0.25, 0.5, 0.75, 1];
+            for (var g = 0; g < ratios.length; g++) {
+                gridCircles += '<circle cx="' + center + '" cy="' + center + '" r="' + (maxRadius * ratios[g]) + '" fill="none" stroke="#e2e8f0" stroke-width="1"/>';
+            }
             
             // Generate axis lines and labels
-            const axisLines = axes.map(axis => {
-                const rad = (axis.angle * Math.PI) / 180;
-                const endX = center + Math.cos(rad) * maxRadius;
-                const endY = center + Math.sin(rad) * maxRadius;
-                const labelX = center + Math.cos(rad) * (maxRadius + 25);
-                const labelY = center + Math.sin(rad) * (maxRadius + 25);
+            var axisLines = '';
+            for (var a = 0; a < axes.length; a++) {
+                var ax = axes[a];
+                var rad = (ax.angle * Math.PI) / 180;
+                var endX = center + Math.cos(rad) * maxRadius;
+                var endY = center + Math.sin(rad) * maxRadius;
+                var labelX = center + Math.cos(rad) * (maxRadius + 25);
+                var labelY = center + Math.sin(rad) * (maxRadius + 25);
                 
-                const isWinner = axis.key === winner;
-                const labelColor = isWinner ? axis.color : '#64748b';
-                const fontWeight = isWinner ? '700' : '500';
+                var isWinner = ax.key === winner;
+                var labelColor = isWinner ? ax.color : '#64748b';
+                var fontWeight = isWinner ? '700' : '500';
                 
-                return `
-                    <line x1="${center}" y1="${center}" x2="${endX}" y2="${endY}" stroke="#cbd5e0" stroke-width="1"/>
-                    <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" 
-                          fill="${labelColor}" font-size="11" font-weight="${fontWeight}">${axis.label.split(' ')[0]}</text>
-                `;
-            }).join('');
+                axisLines += '<line x1="' + center + '" y1="' + center + '" x2="' + endX + '" y2="' + endY + '" stroke="#cbd5e0" stroke-width="1"/>';
+                axisLines += '<text x="' + labelX + '" y="' + labelY + '" text-anchor="middle" dominant-baseline="middle" fill="' + labelColor + '" font-size="11" font-weight="' + fontWeight + '">' + ax.label.split(' ')[0] + '</text>';
+            }
             
             // Generate data points
-            const dataPoints = axes.map((axis, i) => {
-                const isWinner = axis.key === winner;
-                return `<circle cx="${points[i].x}" cy="${points[i].y}" r="${isWinner ? 8 : 5}" 
-                         fill="${axis.color}" stroke="white" stroke-width="2"/>`;
-            }).join('');
+            var dataPoints = '';
+            for (var d = 0; d < axes.length; d++) {
+                var dx = axes[d];
+                var isW = dx.key === winner;
+                dataPoints += '<circle cx="' + points[d].x + '" cy="' + points[d].y + '" r="' + (isW ? 8 : 5) + '" fill="' + dx.color + '" stroke="white" stroke-width="2"/>';
+            }
             
-            return `
-                <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-                    <!-- Grid -->
-                    ${gridCircles}
-                    
-                    <!-- Axes -->
-                    ${axisLines}
-                    
-                    <!-- Data polygon -->
-                    <polygon points="${polygonPoints}" fill="rgba(102, 126, 234, 0.2)" stroke="#667eea" stroke-width="2"/>
-                    
-                    <!-- Data points -->
-                    ${dataPoints}
-                </svg>
-            `;
+            return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' + gridCircles + axisLines + '<polygon points="' + polygonPoints + '" fill="rgba(102, 126, 234, 0.2)" stroke="#667eea" stroke-width="2"/>' + dataPoints + '</svg>';
         }
         
         // Generate decision analysis HTML
         function generateDecisionAnalysis(scores, winner) {
-            const approaches = [
+            var approaches = [
                 { key: 'own', label: 'Own & Build', color: '#10b981' },
                 { key: 'partner', label: 'Partner & Adapt', color: '#3b82f6' },
                 { key: 'source', label: 'Source & Specify', color: '#8b5cf6' },
@@ -2203,57 +1810,37 @@
             ];
             
             // Sort by score descending
-            const sorted = approaches.map(a => ({...a, score: scores[a.key]}))
-                                     .sort((a, b) => b.score - a.score);
+            var sorted = approaches.map(function(a) { return {key: a.key, label: a.label, color: a.color, score: scores[a.key]}; });
+            sorted.sort(function(a, b) { return b.score - a.score; });
             
             // Check if it was a close call (within 2 points of winner)
-            const winnerScore = sorted[0].score;
-            const runnerUp = sorted[1];
-            const isCloseCall = (winnerScore - runnerUp.score) <= 2;
+            var winnerScore = sorted[0].score;
+            var runnerUp = sorted[1];
+            var isCloseCall = (winnerScore - runnerUp.score) <= 2;
             
-            const legendItems = sorted.map(item => `
-                <div class="legend-item ${item.key === winner ? 'winner' : ''}">
-                    <div class="legend-color" style="background: ${item.color}"></div>
-                    <div class="legend-label">${item.label}</div>
-                    <div class="legend-score">${item.score > 0 ? '+' : ''}${item.score}</div>
-                </div>
-            `).join('');
+            var legendItems = '';
+            for (var i = 0; i < sorted.length; i++) {
+                var item = sorted[i];
+                legendItems += '<div class="legend-item ' + (item.key === winner ? 'winner' : '') + '"><div class="legend-color" style="background: ' + item.color + '"></div><div class="legend-label">' + item.label + '</div><div class="legend-score">' + (item.score > 0 ? '+' : '') + item.score + '</div></div>';
+            }
             
-            const closeCallNote = isCloseCall ? `
-                <div class="close-call-note">
-                    <strong>Close call:</strong> ${runnerUp.label} scored within ${winnerScore - runnerUp.score} points. 
-                    Consider if circumstances change, the alternative may become more appropriate.
-                </div>
-            ` : '';
+            var closeCallNote = isCloseCall ? '<div class="close-call-note"><strong>Close call:</strong> ' + runnerUp.label + ' scored within ' + (winnerScore - runnerUp.score) + ' points. Consider if circumstances change, the alternative may become more appropriate.</div>' : '';
             
-            return `
-                <div class="decision-analysis">
-                    <h4>📊 How Your Answers Scored</h4>
-                    <div class="radar-container">
-                        <div class="radar-chart">
-                            ${generateRadarChart(scores, winner)}
-                        </div>
-                        <div class="radar-legend">
-                            ${legendItems}
-                        </div>
-                    </div>
-                    ${closeCallNote}
-                </div>
-            `;
+            return '<div class="decision-analysis"><h4>📊 How Your Answers Scored</h4><div class="radar-container"><div class="radar-chart">' + generateRadarChart(scores, winner) + '</div><div class="radar-legend">' + legendItems + '</div></div>' + closeCallNote + '</div>';
         }
         
         function showRecommendation() {
-            const approach = calculateRecommendation();
+            var approach = calculateRecommendation();
             
             // Save assessment to localStorage
-            const assessment = {
+            var assessment = {
                 id: generateAssessmentId(),
                 timestamp: new Date().toISOString(),
                 category: categorySelect.options[categorySelect.selectedIndex].text,
                 categoryValue: answers.category,
                 approach: approach,
-                answers: {...answers},
-                scores: {...lastCalculatedScores},
+                answers: JSON.parse(JSON.stringify(answers)),
+                scores: JSON.parse(JSON.stringify(lastCalculatedScores)),
                 challengeNotes: ''
             };
             
@@ -2267,12 +1854,12 @@
             document.getElementById('recommendation').classList.add('active');
             
             // Populate recommendation based on approach
-            const recommendations = {
+            var recommendations = {
                 own: {
                     title: 'Own & Build',
                     subtitle: 'Maximum control, full ownership, long-term strategic play',
                     productBenefit: 'Enables breakthrough innovation that redefines the category, creates new consumer habits, and owns the narrative completely.',
-                    rationale: `Based on your answers, this project warrants full ownership. You have ${answers.capability === 'strong' ? 'strong in-house capability' : 'the strategic importance'}, ${answers.intent === 'core-brand' ? 'core brand differentiation goals' : 'long-term strategic value'}, and ${answers.investment === 'high' ? 'appropriate investment appetite' : 'patient timeline'} that justify the higher investment and longer development cycle. This approach gives you maximum control over the product roadmap, IP ownership, and ability to defend your position.`,
+                    rationale: 'Based on your answers, this project warrants full ownership. You have the strategic importance, capability, and investment appetite that justify the higher investment and longer development cycle. This approach gives you maximum control over the product roadmap, IP ownership, and ability to defend your position.',
                     accepting: [
                         'Maximum control over product roadmap and future iterations',
                         'Full IP ownership - can prevent competitor copying',
@@ -2308,7 +1895,7 @@
                     title: 'Joint Development',
                     subtitle: 'Shared R&D from scratch - use sparingly',
                     productBenefit: 'Combines our brand trust with partner\'s technical capability to deliver credible innovation we couldn\'t achieve alone.',
-                    rationale: `Your answers suggest ${answers.ip === 'shared' ? 'you already have shared IP ownership with a partner, which means Joint Development is your current reality. ' : ''}you need capabilities you don't have (${answers.capability}), but the project has enough strategic importance (${answers.intent}) to warrant co-creating rather than just adapting an existing solution. ${answers.ip === 'shared' ? 'Since your partner owns critical IP (e.g., heat system for Perfect Prep), you\'re committed to this joint approach unless you buy them out or redesign around their patents.' : 'However, be warned: Joint Development has the longest timelines due to coordination overhead and shared decision-making.'}`,
+                    rationale: 'Your answers suggest you need capabilities you don\'t have, but the project has enough strategic importance to warrant co-creating rather than just adapting an existing solution. However, be warned: Joint Development has the longest timelines due to coordination overhead and shared decision-making.',
                     accepting: [
                         'Access to partner capabilities and IP you don\'t have',
                         'Shared financial risk and investment',
@@ -2338,13 +1925,13 @@
                         { content: 'This is the SLOWEST approach due to coordination complexity. Only choose if the strategic value justifies the timeline and governance overhead.' },
                         { content: 'Partner misalignment (different priorities, timelines, or risk appetite) can kill projects. Ensure strong relationship and aligned incentives before committing.' }
                     ],
-                    reconsider: answers.ip === 'shared' ? 'If volumes justify it (>500K units/year) and margins are being squeezed by partner costs, evaluate buying out their IP to move to Own. Alternatively, if the relationship isn\'t working, consider redesigning around their patents (expensive but gives you freedom) or pivoting to Partner & Adapt with a different supplier.' : 'If coordination is taking longer than development, or if partner priorities shift, consider either: (1) buying them out to Own, or (2) pivoting to Partner & Adapt with a different supplier who has an existing platform.'
+                    reconsider: 'If coordination is taking longer than development, or if partner priorities shift, consider either: (1) buying them out to Own, or (2) pivoting to Partner & Adapt with a different supplier who has an existing platform.'
                 },
                 partner: {
                     title: 'Partner & Adapt',
                     subtitle: 'Customize existing solution - the sweet spot for many projects',
                     productBenefit: 'Enables us to own the narrative and positioning in line with our brand language while delivering proven performance consumers trust.',
-                    rationale: `This is likely your best bet. You need ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'speed to market' : 'balanced speed and control'}, have ${answers.capability === 'weak' || answers.capability === 'none' ? 'limited in-house capability' : 'some capability but need help'}, and ${answers.intent === 'test-learn' ? 'want to validate the opportunity before full commitment' : 'want to enter the market efficiently'}. Partner & Adapt lets you customize an existing platform (design, branding, performance tuning) while the partner handles the heavy R&D lifting.`,
+                    rationale: 'This is likely your best bet. You need speed, have limited in-house capability, and want to enter the market efficiently. Partner & Adapt lets you customize an existing platform (design, branding, performance tuning) while the partner handles the heavy R&D lifting.',
                     accepting: [
                         'Fast to market - 6-9 months from brief to launch',
                         'Lower investment & risk (50K-200K)',
@@ -2367,35 +1954,25 @@
                     implications: [
                         { title: 'Fast To Market', content: '6-9 months from brief to launch. Partner has done the core R&D, you\'re adapting their proven platform.' },
                         { title: 'Lower Investment & Risk', content: 'Partner absorbs most R&D cost. You pay for customization (50K-200K typically) plus tooling for your branded parts.' },
-                        { title: 'Higher COGS Than Source', content: 'Partner charges for customization work (custom tooling, performance tuning, lower volumes). Expect COGS 20-40% higher than basic Source, reducing your margin by 10-15 percentage points. Trade-off: you get meaningful differentiation vs commodity products.' },
+                        { title: 'Higher COGS Than Source', content: 'Partner charges for customization work (custom tooling, performance tuning, lower volumes). Expect COGS 20-40% higher than basic Source, reducing your margin by 10-15 percentage points.' },
                         { title: 'Validation Before Scale', content: 'Perfect for test & learn. If it works, you can always bring it in-house for v2. If it doesn\'t, you haven\'t blown the R&D budget.' }
                     ],
                     warnings: [
                         { content: 'You\'re dependent on partner\'s platform roadmap. Major changes require their buy-in and may not align with your timeline.' },
                         { content: 'Customization has limits - if you need completely different core technology, this won\'t work. Make sure partner platform is 70%+ fit for your needs.' }
                     ],
-                    clarification: {
-                        title: 'What "Partner & Adapt" Actually Means',
-                        content: [
-                            { point: 'Partner has existing technology platform', detail: 'They have a working product (e.g., pump mechanism, heating system, bottle design) that you will adapt, not build from scratch.' },
-                            { point: 'You CAN customize', detail: 'External design (housing, shape, ergonomics), branding (colors, logos, finishes), control interface (buttons, displays), and minor performance tweaking (heating curves, suction patterns).' },
-                            { point: 'You typically CANNOT customize', detail: 'Core functionality, fundamental technology, or completely different mechanisms. If the partner\'s platform is <70% fit, this approach won\'t work.' },
-                            { point: 'Customization scope', detail: 'New external tooling for housing/buttons + branding + packaging + minor firmware adjustments. Investment: 50K-200K. Timeline: 6-9 months.' },
-                            { point: 'When this won\'t work', detail: 'If you need completely different core technology or no existing platform fits your needs, consider Joint Development (co-create with partner) or Own & Build (develop yourself).' }
-                        ]
-                    },
                     reconsider: 'If volumes exceed 250K units/year and you have strong conviction in the long-term opportunity, build business case to Own for v2 to recapture margin and control.'
                 },
                 source: {
                     title: 'Source & Specify',
                     subtitle: 'Buy smart, move fast, optimize margin',
                     productBenefit: 'Delivers price-competitive presence with immediate availability that addresses articulated consumer needs in line with market expectations now.',
-                    rationale: `The smart play here is to source finished goods. You ${answers.intent === 'tactical' ? 'need to fill a tactical gap' : answers.intent === 'market-share' ? 'want a piece of a big pie' : 'prioritize speed and low risk'}, ${answers.volume === 'very-high' || answers.volume === 'high' ? 'expect high volumes where Source economics are excellent' : 'have uncertain volumes'}, and ${answers.timeline === 'urgent' || answers.timeline === 'fast' ? 'need speed' : 'want to minimize investment'}. Source & Specify is the fastest, lowest-risk approach that can deliver ${answers.volume === 'very-high' || answers.volume === 'high' ? 'excellent margins at scale' : 'decent margins with minimal capex'}.`,
+                    rationale: 'The smart play here is to source finished goods. You prioritize speed, want to minimize investment, and the market doesn\'t require deep differentiation. Source & Specify is the fastest, lowest-risk approach.',
                     accepting: [
                         'Fastest to market - 3-6 months from supplier to first container',
                         'Lowest investment (20K-75K) and risk',
                         'Proven products with established manufacturing',
-                        answers.volume === 'very-high' || answers.volume === 'high' ? 'Excellent margin potential at your volumes' : 'Manageable inventory risk'
+                        'Excellent margin potential at high volumes'
                     ],
                     sacrificing: [
                         'Minimal control - spec within supplier capabilities',
@@ -2413,200 +1990,86 @@
                     implications: [
                         { title: 'Fastest To Market', content: '3-6 months from finding supplier to first container. Products are proven and manufacturing is established.' },
                         { title: 'Lowest Investment & Risk', content: 'No R&D, minimal tooling (just your branding/packaging). Inventory is your main risk, and that\'s manageable.' },
-                        { title: 'Margin Depends On Category', content: answers.volume === 'very-high' || answers.volume === 'high' ? 'At your expected volumes, Source can deliver excellent margins (low COGS from scale + TT brand premium at retail).' : 'Margins will be moderate - you have less negotiating power at lower volumes, but also less risk.' },
+                        { title: 'Margin Depends On Volume', content: 'At high volumes, Source can deliver excellent margins (low COGS from scale + TT brand premium at retail).' },
                         { title: 'Limited Differentiation', content: 'You can customize colors, packaging, minor features - but core product is off the shelf. Sufficient for tactical plays or very crowded markets.' }
                     ],
                     warnings: [
-                        { content: answers.crowded === 'crowded' || answers.crowded === 'saturated' ? 'This market is crowded/commoditized, so margin pressure is real. Focus on supply chain efficiency and brand strength at retail.' : 'Make sure you\'re not sourcing something competitors can easily copy. If brand differentiation matters, consider Partner & Adapt instead.' },
+                        { content: 'Make sure you\'re not sourcing something competitors can easily copy. If brand differentiation matters, consider Partner & Adapt instead.' },
                         { content: 'You have limited control over future product improvements. If category becomes strategic, plan transition to Own or Partner & Adapt.' }
                     ],
                     reconsider: 'If this category becomes more strategic (consumers demand TT innovation, not just presence), or if volumes justify the investment, consider moving to Partner & Adapt or Own for v2.'
                 }
             };
             
-            const rec = recommendations[approach];
-            
-            // Send admin notification email
-            sendAdminNotification(assessment, rec);
+            var rec = recommendations[approach];
             
             document.getElementById('approachTitle').textContent = rec.title;
             document.getElementById('approachSubtitle').textContent = rec.subtitle;
             
             // Add product benefit
-            const headerElement = document.querySelector('.recommendation-header');
+            var headerElement = document.querySelector('.recommendation-header');
             if (rec.productBenefit && headerElement) {
-                const benefitHtml = `
-                    <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-top: 20px;">
-                        <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 6px;">Product Benefit</div>
-                        <div style="font-size: 16px; line-height: 1.5;">${rec.productBenefit}</div>
-                    </div>
-                `;
+                var benefitHtml = '<div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-top: 20px;"><div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 6px;">Product Benefit</div><div style="font-size: 16px; line-height: 1.5;">' + rec.productBenefit + '</div></div>';
                 headerElement.insertAdjacentHTML('beforeend', benefitHtml);
             }
             
             document.getElementById('rationale').textContent = rec.rationale;
             
             // Create summary section with radar chart
-            const summaryHtml = `
-                <div class="recommendation-summary">
-                    <div class="summary-header">
-                        <div class="summary-title-section">
-                            <h3>${rec.title}</h3>
-                            <p>${rec.subtitle}</p>
-                        </div>
-                        <div class="summary-meta">
-                            <div><strong>Sub-category:</strong> ${categorySelect.options[categorySelect.selectedIndex].text}</div>
-                            <div><strong>Date:</strong> ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Decision Analysis Radar Chart -->
-                    ${generateDecisionAnalysis(lastCalculatedScores, approach)}
-                    
-                    <div class="summary-grid">
-                        <div class="summary-section">
-                            <h4>What You're Accepting ✓</h4>
-                            <ul>
-                                ${rec.accepting.map(item => `<li class="accepting-item">${item}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div class="summary-section">
-                            <h4>What You're Sacrificing ✗</h4>
-                            <ul>
-                                ${rec.sacrificing.map(item => `<li class="sacrificing-item">${item}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="summary-footer">
-                        This recommendation should be referenced in scoping documents and remain consistent through business case approval.<br>
-                        Changes require re-assessment with updated criteria.
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <label for="challengeNotes" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">
-                            📝 Category Lead Notes / Challenge (If you disagree)
-                        </label>
-                        <textarea 
-                            id="challengeNotes" 
-                            placeholder="If you disagree with this recommendation or need to document why you're choosing a different approach, explain here. This will be prominently displayed in the PowerPoint screenshot. Leave blank if you agree with the recommendation."
-                            style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"
-                        ></textarea>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                            <div style="font-size: 13px; color: #718096;">
-                                Example: "Tool recommends Partner & Adapt, but we're choosing Own & Build due to strategic IP requirements."
-                            </div>
-                            <button id="saveNotesBtn" class="btn-primary" style="width: auto; padding: 10px 24px; font-size: 14px;" onclick="saveNotes()">
-                                Save Notes
-                            </button>
-                        </div>
-                        <div id="saveConfirmation" style="display: none; margin-top: 8px; padding: 8px 12px; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 13px; font-weight: 600;">
-                            ✓ Notes saved successfully
-                        </div>
-                    </div>
-                </div>
-            `;
+            var acceptingHtml = '';
+            for (var i = 0; i < rec.accepting.length; i++) {
+                acceptingHtml += '<li class="accepting-item">' + rec.accepting[i] + '</li>';
+            }
+            
+            var sacrificingHtml = '';
+            for (var j = 0; j < rec.sacrificing.length; j++) {
+                sacrificingHtml += '<li class="sacrificing-item">' + rec.sacrificing[j] + '</li>';
+            }
+            
+            var summaryHtml = '<div class="recommendation-summary"><div class="summary-header"><div class="summary-title-section"><h3>' + rec.title + '</h3><p>' + rec.subtitle + '</p></div><div class="summary-meta"><div><strong>Sub-category:</strong> ' + categorySelect.options[categorySelect.selectedIndex].text + '</div><div><strong>Date:</strong> ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '</div></div></div>' + generateDecisionAnalysis(lastCalculatedScores, approach) + '<div class="summary-grid"><div class="summary-section"><h4>What You\'re Accepting ✓</h4><ul>' + acceptingHtml + '</ul></div><div class="summary-section"><h4>What You\'re Sacrificing ✗</h4><ul>' + sacrificingHtml + '</ul></div></div><div class="summary-footer">This recommendation should be referenced in scoping documents and remain consistent through business case approval.<br>Changes require re-assessment with updated criteria.</div><div style="margin-top: 20px;"><label for="challengeNotes" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">📝 Category Lead Notes / Challenge (If you disagree)</label><textarea id="challengeNotes" placeholder="If you disagree with this recommendation or need to document why you\'re choosing a different approach, explain here. This will be prominently displayed in the PowerPoint screenshot. Leave blank if you agree with the recommendation." style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical;"></textarea><div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;"><div style="font-size: 13px; color: #718096;">Example: "Tool recommends Partner & Adapt, but we\'re choosing Own & Build due to strategic IP requirements."</div><button id="saveNotesBtn" class="btn-primary" style="width: auto; padding: 10px 24px; font-size: 14px;" onclick="saveNotes()">Save Notes</button></div><div id="saveConfirmation" style="display: none; margin-top: 8px; padding: 8px 12px; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 13px; font-weight: 600;">✓ Notes saved successfully</div></div></div>';
             
             // Insert summary before other sections
-            const recommendationDiv = document.getElementById('recommendation');
-            const firstSection = recommendationDiv.querySelector('.section');
+            var recommendationDiv = document.getElementById('recommendation');
+            var firstSection = recommendationDiv.querySelector('.section');
             
             // Add export buttons (Screenshot + PDF)
-            const exportBtnHtml = `
-                <div class="export-buttons">
-                    <button class="btn-export btn-screenshot" id="screenshotBtn" onclick="downloadScreenshot()">
-                        📷 Download Screenshot (PowerPoint)
-                    </button>
-                    <button class="btn-export btn-pdf" id="pdfBtn" onclick="downloadPDF()">
-                        📄 Download PDF (Audit Trail)
-                    </button>
-                    <span id="screenshotLoading" style="display: none; margin-left: 10px; color: #667eea; font-size: 14px;">Generating...</span>
-                </div>
-            `;
+            var exportBtnHtml = '<div class="export-buttons"><button class="btn-export btn-screenshot" id="screenshotBtn" onclick="downloadScreenshot()">📷 Download Screenshot (PowerPoint)</button><button class="btn-export btn-pdf" id="pdfBtn" onclick="downloadPDF()">📄 Download PDF (Audit Trail)</button><span id="screenshotLoading" style="display: none; margin-left: 10px; color: #667eea; font-size: 14px;">Generating...</span></div>';
             firstSection.insertAdjacentHTML('beforebegin', exportBtnHtml);
             firstSection.insertAdjacentHTML('beforebegin', summaryHtml);
             
             // Add decision tree after summary
-            const decisionTreeHtml = generateDecisionTree(lastCalculatedScores, approach);
+            var decisionTreeHtml = generateDecisionTree(lastCalculatedScores, approach);
             document.querySelector('.recommendation-summary').insertAdjacentHTML('beforeend', decisionTreeHtml);
             
-            // Check if delay warning is needed
-            const needsDelayWarning = (
-                (approach === 'own' || approach === 'joint') && 
-                (answers.timeline === 'urgent' || answers.timeline === 'fast') &&
-                (answers.crowded === 'crowded' || answers.crowded === 'saturated')
-            );
-            
-            if (needsDelayWarning) {
-                const delayWarningHtml = `
-                    <div class="delay-warning-box">
-                        <h4><span style="font-size: 20px; margin-right: 8px;">▲</span>Cost of Delay Warning</h4>
-                        <p><strong>Your answers indicate a tension between your chosen approach and market realities:</strong></p>
-                        <ul>
-                            <li>You need speed (${answers.timeline === 'urgent' ? '<6 months' : '6-9 months'})</li>
-                            <li>Market is ${answers.crowded === 'crowded' ? 'crowded' : 'highly saturated'} with active competition</li>
-                            <li>But ${approach === 'own' ? 'Own & Build' : 'Joint Development'} takes 18-24+ months</li>
-                        </ul>
-                        <p><strong>Consider the cost:</strong> In the 12-18 months it takes you to launch, competitors with "good enough" solutions may:</p>
-                        <ul>
-                            <li>Capture first-mover advantage and retail shelf space</li>
-                            <li>Build consumer awareness and preference</li>
-                            <li>Sell 200K-500K units = 2-5M+ revenue head start</li>
-                        </ul>
-                        <p style="margin-top: 12px;"><strong>Question to ask:</strong> Is perfect differentiation in 18 months better than 75% differentiation in 6 months?</p>
-                    </div>
-                `;
-                firstSection.insertAdjacentHTML('beforebegin', delayWarningHtml);
-            }
-            
             // Tradeoffs
-            const tradeoffsHtml = rec.tradeoffs.map(t => 
-                `<div class="tradeoff-item">
-                    <div class="tradeoff-label">${t.label}</div>
-                    <div class="tradeoff-value">${t.value}</div>
-                </div>`
-            ).join('');
+            var tradeoffsHtml = '';
+            for (var t = 0; t < rec.tradeoffs.length; t++) {
+                tradeoffsHtml += '<div class="tradeoff-item"><div class="tradeoff-label">' + rec.tradeoffs[t].label + '</div><div class="tradeoff-value">' + rec.tradeoffs[t].value + '</div></div>';
+            }
             document.getElementById('tradeoffs').innerHTML = tradeoffsHtml;
             
             // Implications
-            const implicationsHtml = rec.implications.map(i =>
-                `<div class="card">
-                    <div class="card-title">${i.title}</div>
-                    <div class="card-content">${i.content}</div>
-                </div>`
-            ).join('');
+            var implicationsHtml = '';
+            for (var im = 0; im < rec.implications.length; im++) {
+                implicationsHtml += '<div class="card"><div class="card-title">' + rec.implications[im].title + '</div><div class="card-content">' + rec.implications[im].content + '</div></div>';
+            }
             document.getElementById('implications').innerHTML = implicationsHtml;
             
             // Warnings
-            const warningsHtml = rec.warnings.map(w =>
-                `<div class="warning-box">
-                    <strong>Warning:</strong> ${w.content}
-                </div>`
-            ).join('');
-            document.getElementById('warnings').innerHTML = warningsHtml;
-            
-            // Clarification section
-            const clarificationSection = document.getElementById('clarificationSection');
-            if (rec.clarification) {
-                clarificationSection.style.display = 'block';
-                document.getElementById('clarificationTitle').textContent = rec.clarification.title;
-                const clarificationHtml = rec.clarification.content.map(item =>
-                    `<div class="card">
-                        <div class="card-title">${item.point}</div>
-                        <div class="card-content">${item.detail}</div>
-                    </div>`
-                ).join('');
-                document.getElementById('clarification').innerHTML = clarificationHtml;
-            } else {
-                clarificationSection.style.display = 'none';
+            var warningsHtml = '';
+            for (var w = 0; w < rec.warnings.length; w++) {
+                warningsHtml += '<div class="warning-box"><strong>Warning:</strong> ' + rec.warnings[w].content + '</div>';
             }
+            document.getElementById('warnings').innerHTML = warningsHtml;
             
             // Reconsider
             document.getElementById('reconsider').textContent = rec.reconsider;
             
             // Add event listener for challenge notes
-            setTimeout(() => {
-                const notesTextarea = document.getElementById('challengeNotes');
+            setTimeout(function() {
+                var notesTextarea = document.getElementById('challengeNotes');
                 if (notesTextarea) {
-                    notesTextarea.addEventListener('input', (e) => {
+                    notesTextarea.addEventListener('input', function(e) {
                         updateAssessmentNotes(e.target.value);
                     });
                 }
@@ -2617,25 +2080,35 @@
             clearProgress();
             
             currentQuestion = 1;
-            Object.keys(answers).forEach(key => delete answers[key]);
+            for (var key in answers) {
+                delete answers[key];
+            }
             lastCalculatedScores = null;
             
-            [categorySelect, intentSelect, volumeSelect, timelineSelect, 
-             positionSelect, crowdedSelect, capabilitySelect, ipSelect, customizationSelect, investmentSelect].forEach(select => {
-                select.value = '';
-            });
+            categorySelect.value = '';
+            intentSelect.value = '';
+            volumeSelect.value = '';
+            timelineSelect.value = '';
+            positionSelect.value = '';
+            crowdedSelect.value = '';
+            capabilitySelect.value = '';
+            ipSelect.value = '';
+            customizationSelect.value = '';
+            investmentSelect.value = '';
             
             // Remove dynamically added elements
-            const summaryElements = document.querySelectorAll('.recommendation-summary, .delay-warning-box, .decision-analysis, .decision-tree, .export-buttons');
-            summaryElements.forEach(el => el.remove());
+            var summaryElements = document.querySelectorAll('.recommendation-summary, .delay-warning-box, .decision-analysis, .decision-tree, .export-buttons');
+            for (var i = 0; i < summaryElements.length; i++) {
+                summaryElements[i].remove();
+            }
             
             // Remove product benefit from header
-            const benefitDiv = document.querySelector('.recommendation-header > div:last-child');
+            var benefitDiv = document.querySelector('.recommendation-header > div:last-child');
             if (benefitDiv && benefitDiv.querySelector('div')) {
                 benefitDiv.remove();
             }
             
-            const container = document.querySelector('.container');
+            var container = document.querySelector('.container');
             container.style.maxWidth = '800px';
             
             document.getElementById('recommendation').classList.remove('active');
@@ -2655,7 +2128,7 @@
         
         // Show cloud status indicator
         function updateCloudStatus() {
-            const statusEl = document.getElementById('cloudStatus');
+            var statusEl = document.getElementById('cloudStatus');
             if (GOOGLE_SCRIPT_URL) {
                 statusEl.style.display = 'block';
                 statusEl.style.background = '#d1fae5';
@@ -2676,53 +2149,61 @@
         }
         
         function saveAssessment(assessment) {
-            const assessments = getAssessments();
+            var assessments = getAssessments();
             assessments.push(assessment);
             localStorage.setItem('mayborn_assessments', JSON.stringify(assessments));
             localStorage.setItem('current_assessment_id', assessment.id);
             
-            // Also submit to cloud (non-blocking)
-            submitToCloud(formatForCloud(assessment)).then(result => {
-                if (result.success) {
-                    console.log('Assessment synced to cloud');
-                } else if (result.reason === 'not_configured') {
-                    // Silent - localStorage only mode
-                } else {
-                    console.warn('Cloud sync failed - data saved locally');
-                }
+            // Send to cloud
+            var approaches = {own:'Own & Build',joint:'Joint Development',partner:'Partner & Adapt',source:'Source & Specify'};
+            sendToCloud({
+                assessmentId: assessment.id,
+                userName: getElementValue('userName') || 'Anonymous',
+                category: assessment.category,
+                recommendation: approaches[assessment.approach],
+                scores: assessment.scores,
+                answers: assessment.answers,
+                challengeNotes: ''
             });
         }
         
         function getAssessments() {
-            const stored = localStorage.getItem('mayborn_assessments');
+            var stored = localStorage.getItem('mayborn_assessments');
             return stored ? JSON.parse(stored) : [];
         }
         
         function updateAssessmentNotes(notes) {
-            const currentId = localStorage.getItem('current_assessment_id');
+            var currentId = localStorage.getItem('current_assessment_id');
             if (!currentId) return;
             
-            const assessments = getAssessments();
-            const assessment = assessments.find(a => a.id === currentId);
-            if (assessment) {
-                assessment.challengeNotes = notes;
-                localStorage.setItem('mayborn_assessments', JSON.stringify(assessments));
+            var assessments = getAssessments();
+            for (var i = 0; i < assessments.length; i++) {
+                if (assessments[i].id === currentId) {
+                    assessments[i].challengeNotes = notes;
+                    localStorage.setItem('mayborn_assessments', JSON.stringify(assessments));
+                    break;
+                }
             }
         }
         
         function deleteAssessment(assessmentId) {
-            if (!confirm(`Are you sure you want to delete assessment ${assessmentId}? This cannot be undone.`)) {
+            if (!confirm('Are you sure you want to delete assessment ' + assessmentId + '? This cannot be undone.')) {
                 return;
             }
             
-            const assessments = getAssessments();
-            const filteredAssessments = assessments.filter(a => a.id !== assessmentId);
+            var assessments = getAssessments();
+            var filteredAssessments = [];
+            for (var i = 0; i < assessments.length; i++) {
+                if (assessments[i].id !== assessmentId) {
+                    filteredAssessments.push(assessments[i]);
+                }
+            }
             localStorage.setItem('mayborn_assessments', JSON.stringify(filteredAssessments));
             renderAdminView();
         }
         
         function showAdminView() {
-            const password = prompt('Enter admin password:');
+            var password = prompt('Enter admin password:');
             if (password !== '54325') {
                 if (password !== null) {
                     alert('Incorrect password');
@@ -2739,37 +2220,29 @@
             document.getElementById('recommendation').classList.remove('active');
             document.getElementById('adminView').style.display = 'block';
             
-            const assessments = getAssessments();
-            const tbody = document.getElementById('adminTableBody');
+            var assessments = getAssessments();
+            var tbody = document.getElementById('adminTableBody');
             
             if (assessments.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #718096;">No assessments completed yet</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = assessments.reverse().map(a => {
-                const date = new Date(a.timestamp);
-                const approaches = {
-                    own: 'Own & Build',
-                    joint: 'Joint Development',
-                    partner: 'Partner & Adapt',
-                    source: 'Source & Specify'
-                };
+            var approaches = {
+                own: 'Own & Build',
+                joint: 'Joint Development',
+                partner: 'Partner & Adapt',
+                source: 'Source & Specify'
+            };
+            
+            var html = '';
+            for (var i = assessments.length - 1; i >= 0; i--) {
+                var a = assessments[i];
+                var date = new Date(a.timestamp);
                 
-                return `
-                    <tr>
-                        <td>${a.id}</td>
-                        <td>${date.toLocaleDateString('en-GB')} ${date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}</td>
-                        <td>${a.category}</td>
-                        <td><span class="approach-badge approach-${a.approach}">${approaches[a.approach]}</span></td>
-                        <td style="max-width: 300px; font-size: 13px; color: #4a5568;">${a.challengeNotes || '<em style="color: #a0aec0;">None</em>'}</td>
-                        <td>
-                            <button class="btn-view-details" onclick='viewAssessmentDetails(${JSON.stringify(a)})'>View</button>
-                            <button class="btn-view-details" onclick='deleteAssessment("${a.id}")' style="background: #fc8181; margin-left: 8px;">Delete</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+                html += '<tr><td>' + a.id + '</td><td>' + date.toLocaleDateString('en-GB') + ' ' + date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'}) + '</td><td>' + a.category + '</td><td><span class="approach-badge approach-' + a.approach + '">' + approaches[a.approach] + '</span></td><td style="max-width: 300px; font-size: 13px; color: #4a5568;">' + (a.challengeNotes || '<em style="color: #a0aec0;">None</em>') + '</td><td><button class="btn-view-details" onclick=\'viewAssessmentDetails(' + JSON.stringify(a).replace(/'/g, "\\'") + ')\'>View</button><button class="btn-view-details" onclick=\'deleteAssessment("' + a.id + '")\' style="background: #fc8181; margin-left: 8px;">Delete</button></td></tr>';
+            }
+            tbody.innerHTML = html;
         }
         
         function hideAdminView() {
@@ -2778,10 +2251,10 @@
         }
         
         function viewAssessmentDetails(assessment) {
-            const modal = document.getElementById('assessmentModal');
-            const details = document.getElementById('assessmentDetails');
+            var modal = document.getElementById('assessmentModal');
+            var details = document.getElementById('assessmentDetails');
             
-            const answerLabels = {
+            var answerLabels = {
                 intent: 'Strategic Goal',
                 volume: 'Volume Expectation',
                 timeline: 'Timeline',
@@ -2793,41 +2266,20 @@
                 investment: 'Investment Appetite'
             };
             
-            // Generate radar chart for modal if scores exist
-            let radarHtml = '';
-            if (assessment.scores) {
-                radarHtml = `
-                    <h4 style="margin: 20px 0 12px; color: #2d3748;">Decision Scores:</h4>
-                    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-                        ${generateRadarChart(assessment.scores, assessment.approach)}
-                    </div>
-                `;
+            var approachNames = {own: 'Own & Build', joint: 'Joint Development', partner: 'Partner & Adapt', source: 'Source & Specify'};
+            
+            var tableHtml = '';
+            for (var key in assessment.answers) {
+                if (key !== 'category') {
+                    tableHtml += '<tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 12px 8px; font-weight: 600; color: #4a5568; width: 40%;">' + (answerLabels[key] || key) + '</td><td style="padding: 12px 8px; color: #2d3748;">' + assessment.answers[key] + '</td></tr>';
+                }
             }
             
-            const detailsHtml = `
-                <h3 style="margin-bottom: 20px; color: #2d3748;">Assessment ${assessment.id}</h3>
-                <div style="background: #f7fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-                    <strong>Date:</strong> ${new Date(assessment.timestamp).toLocaleString('en-GB')}<br>
-                    <strong>Category:</strong> ${assessment.category}<br>
-                    <strong>Recommendation:</strong> <span class="approach-badge approach-${assessment.approach}">${assessment.approach === 'own' ? 'Own & Build' : assessment.approach === 'joint' ? 'Joint Development' : assessment.approach === 'partner' ? 'Partner & Adapt' : 'Source & Specify'}</span>
-                </div>
-                ${radarHtml}
-                <h4 style="margin-bottom: 12px; color: #2d3748;">Assessment Inputs:</h4>
-                <table style="width: 100%; border-collapse: collapse;">
-                    ${Object.entries(assessment.answers).filter(([key]) => key !== 'category').map(([key, value]) => `
-                        <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px 8px; font-weight: 600; color: #4a5568; width: 40%;">${answerLabels[key] || key}</td>
-                            <td style="padding: 12px 8px; color: #2d3748;">${value}</td>
-                        </tr>
-                    `).join('')}
-                </table>
-                ${assessment.challengeNotes ? `
-                    <h4 style="margin: 20px 0 12px; color: #2d3748;">Challenge Notes:</h4>
-                    <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px;">
-                        ${assessment.challengeNotes}
-                    </div>
-                ` : ''}
-            `;
+            var detailsHtml = '<h3 style="margin-bottom: 20px; color: #2d3748;">Assessment ' + assessment.id + '</h3><div style="background: #f7fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px;"><strong>Date:</strong> ' + new Date(assessment.timestamp).toLocaleString('en-GB') + '<br><strong>Category:</strong> ' + assessment.category + '<br><strong>Recommendation:</strong> <span class="approach-badge approach-' + assessment.approach + '">' + approachNames[assessment.approach] + '</span></div><h4 style="margin-bottom: 12px; color: #2d3748;">Assessment Inputs:</h4><table style="width: 100%; border-collapse: collapse;">' + tableHtml + '</table>';
+            
+            if (assessment.challengeNotes) {
+                detailsHtml += '<h4 style="margin: 20px 0 12px; color: #2d3748;">Challenge Notes:</h4><div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px;">' + assessment.challengeNotes + '</div>';
+            }
             
             details.innerHTML = detailsHtml;
             modal.style.display = 'flex';
@@ -2838,316 +2290,119 @@
         }
         
         function exportAssessmentsCSV() {
-            const assessments = getAssessments();
+            var assessments = getAssessments();
             if (assessments.length === 0) {
                 alert('No assessments to export');
                 return;
             }
             
-            const approaches = {
+            var approaches = {
                 own: 'Own & Build',
                 joint: 'Joint Development',
                 partner: 'Partner & Adapt',
                 source: 'Source & Specify'
             };
             
-            let csv = 'Assessment ID,Date,Time,Sub-category,Recommendation,Own Score,Joint Score,Partner Score,Source Score,Strategic Goal,Volume,Timeline,Position,Crowdedness,Capability,IP Ownership,Customization,Investment,Challenge Notes\n';
+            var csv = 'Assessment ID,Date,Time,Sub-category,Recommendation,Own Score,Joint Score,Partner Score,Source Score,Strategic Goal,Volume,Timeline,Position,Crowdedness,Capability,IP Ownership,Customization,Investment,Challenge Notes\n';
             
-            assessments.forEach(a => {
-                const date = new Date(a.timestamp);
-                const dateStr = date.toLocaleDateString('en-GB');
-                const timeStr = date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
+            for (var i = 0; i < assessments.length; i++) {
+                var a = assessments[i];
+                var date = new Date(a.timestamp);
+                var dateStr = date.toLocaleDateString('en-GB');
+                var timeStr = date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
                 
-                csv += `"${a.id}","${dateStr}","${timeStr}","${a.category}","${approaches[a.approach]}",`;
-                csv += `"${a.scores?.own || ''}","${a.scores?.joint || ''}","${a.scores?.partner || ''}","${a.scores?.source || ''}",`;
-                csv += `"${a.answers.intent || ''}","${a.answers.volume || ''}","${a.answers.timeline || ''}",`;
-                csv += `"${a.answers.position || ''}","${a.answers.crowded || ''}","${a.answers.capability || ''}",`;
-                csv += `"${a.answers.ip || ''}","${a.answers.customization || ''}","${a.answers.investment || ''}","${(a.challengeNotes || '').replace(/"/g, '""')}"\n`;
-            });
+                csv += '"' + a.id + '","' + dateStr + '","' + timeStr + '","' + a.category + '","' + approaches[a.approach] + '",';
+                csv += '"' + (a.scores ? a.scores.own : '') + '","' + (a.scores ? a.scores.joint : '') + '","' + (a.scores ? a.scores.partner : '') + '","' + (a.scores ? a.scores.source : '') + '",';
+                csv += '"' + (a.answers.intent || '') + '","' + (a.answers.volume || '') + '","' + (a.answers.timeline || '') + '",';
+                csv += '"' + (a.answers.position || '') + '","' + (a.answers.crowded || '') + '","' + (a.answers.capability || '') + '",';
+                csv += '"' + (a.answers.ip || '') + '","' + (a.answers.customization || '') + '","' + (a.answers.investment || '') + '","' + (a.challengeNotes || '').replace(/"/g, '""') + '"\n';
+            }
             
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `mayborn_assessments_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = window.URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = 'mayborn_assessments_' + new Date().toISOString().split('T')[0] + '.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
         }
         
         function saveNotes() {
-            const notesTextarea = document.getElementById('challengeNotes');
-            const notes = notesTextarea ? notesTextarea.value : '';
+            var notesTextarea = document.getElementById('challengeNotes');
+            var notes = notesTextarea ? notesTextarea.value : '';
             updateAssessmentNotes(notes);
             
-            // Sync to cloud (re-submit with updated notes)
-            const currentId = localStorage.getItem('current_assessment_id');
-            if (currentId) {
-                updateCloudNotes(currentId, notes);
+            // Sync to cloud
+            var currentId = localStorage.getItem('current_assessment_id');
+            if (currentId && GOOGLE_SCRIPT_URL) {
+                var assessments = getAssessments();
+                for (var i = 0; i < assessments.length; i++) {
+                    if (assessments[i].id === currentId) {
+                        var a = assessments[i];
+                        var approaches = {own:'Own & Build',joint:'Joint Development',partner:'Partner & Adapt',source:'Source & Specify'};
+                        sendToCloud({
+                            assessmentId: a.id,
+                            userName: getElementValue('userName') || 'Anonymous',
+                            category: a.category,
+                            recommendation: approaches[a.approach],
+                            scores: a.scores,
+                            answers: a.answers,
+                            challengeNotes: notes
+                        });
+                        break;
+                    }
+                }
             }
             
-            const confirmation = document.getElementById('saveConfirmation');
+            var confirmation = document.getElementById('saveConfirmation');
             confirmation.style.display = 'block';
             
-            setTimeout(() => {
+            setTimeout(function() {
                 confirmation.style.display = 'none';
             }, 3000);
         }
         
         function downloadScreenshot() {
-            const btn = document.getElementById('screenshotBtn');
-            const loading = document.getElementById('screenshotLoading');
-            
-            btn.disabled = true;
-            loading.style.display = 'inline';
-            
-            const approach = calculateRecommendation();
-            const rec = getRecommendationData(approach);
-            const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
-            const dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-            const notes = document.getElementById('challengeNotes')?.value || '';
-            const currentId = localStorage.getItem('current_assessment_id') || '';
-            
-            // Get scores for mini radar in screenshot
-            const scores = lastCalculatedScores;
-            const sorted = [
-                { key: 'own', label: 'Own', score: scores.own, color: '#10b981' },
-                { key: 'partner', label: 'Partner', score: scores.partner, color: '#3b82f6' },
-                { key: 'source', label: 'Source', score: scores.source, color: '#8b5cf6' },
-                { key: 'joint', label: 'Joint', score: scores.joint, color: '#f59e0b' }
-            ].sort((a, b) => b.score - a.score);
-            
-            const winnerScore = sorted[0].score;
-            const isCloseCall = (winnerScore - sorted[1].score) <= 2;
-            
-            // Build compact decision logic for footer
-            const keyInputs = [
-                { label: 'Goal', value: answers.intent },
-                { label: 'Volume', value: answers.volume },
-                { label: 'Timeline', value: answers.timeline },
-                { label: 'Capability', value: answers.capability },
-                { label: 'IP', value: answers.ip },
-                { label: 'Customization', value: answers.customization }
-            ];
-            
-            const container = document.createElement('div');
-            container.className = 'screenshot-container';
-            container.innerHTML = `
-                <div style="width: 1920px; height: 1080px; background: white; padding: 30px 55px 25px 45px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
-                    <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 3px solid #667eea; gap: 20px;">
-                        <div style="flex: 1; min-width: 0;">
-                            <h1 style="font-size: 30px; color: #2d3748; margin: 0 0 5px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ${rec.title}</h1>
-                            <p style="font-size: 15px; color: #718096; margin: 0; line-height: 1.3;">${rec.subtitle}</p>
-                        </div>
-                        <div style="text-align: right; font-size: 13px; color: #4a5568; flex-shrink: 0; min-width: 240px;">
-                            <div style="margin-bottom: 2px;"><strong>Category:</strong> ${categoryText}</div>
-                            <div style="margin-bottom: 2px;"><strong>Date:</strong> ${dateText}</div>
-                            <div style="margin-bottom: 5px; font-size: 11px; color: #a0aec0;">ID: ${currentId}</div>
-                            <div style="padding: 4px 10px; background: #667eea; color: white; border-radius: 5px; display: inline-block; font-weight: 600; font-size: 12px;">${rec.title}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Main Content: 3 Column Layout -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 260px; gap: 22px; flex: 1; min-height: 0;">
-                        
-                        <!-- Left Column: Accepting -->
-                        <div style="display: flex; flex-direction: column;">
-                            <h3 style="font-size: 16px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #38a169; margin-right: 6px; font-size: 18px;">✓</span> What You're Accepting
-                            </h3>
-                            <ul style="list-style: none; padding: 0; margin: 0; flex: 1;">
-                                ${rec.accepting.map(item => `<li style="padding: 6px 0; color: #2d3748; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 6px;">✓</span>${item}</li>`).join('')}
-                            </ul>
-                        </div>
-                        
-                        <!-- Middle Column: Sacrificing -->
-                        <div style="display: flex; flex-direction: column;">
-                            <h3 style="font-size: 16px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #e53e3e; margin-right: 6px; font-size: 18px;">✗</span> What You're Sacrificing
-                            </h3>
-                            <ul style="list-style: none; padding: 0; margin: 0; flex: 1;">
-                                ${rec.sacrificing.map(item => `<li style="padding: 6px 0; color: #2d3748; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 6px;">✗</span>${item}</li>`).join('')}
-                            </ul>
-                        </div>
-                        
-                        <!-- Right Column: Decision Scores -->
-                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px; border: 2px solid #e2e8f0; display: flex; flex-direction: column;">
-                            <h4 style="font-size: 13px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; text-align: center;">📊 Decision Scores</h4>
-                            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                                ${sorted.map((item, i) => `
-                                    <div style="display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: ${i === 0 ? '#eef2ff' : 'white'}; border-radius: 5px; border: 2px solid ${i === 0 ? '#667eea' : '#e2e8f0'};">
-                                        <div style="width: 10px; height: 10px; border-radius: 3px; background: ${item.color}; flex-shrink: 0;"></div>
-                                        <div style="flex: 1; font-size: 12px; font-weight: ${i === 0 ? '700' : '500'}; color: #2d3748;">${item.label}</div>
-                                        <div style="font-size: 14px; font-weight: 700; color: ${item.color};">${item.score > 0 ? '+' : ''}${item.score}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                            ${isCloseCall ? `<div style="margin-top: 8px; padding: 6px; background: #fffbeb; border-radius: 5px; font-size: 10px; color: #92400e; text-align: center; border-left: 3px solid #f59e0b;"><strong>Close call</strong> - ${sorted[1].label} ${winnerScore - sorted[1].score} pts behind</div>` : ''}
-                        </div>
-                    </div>
-                    
-                    <!-- Key Trade-Offs Row -->
-                    <div style="background: #f7fafc; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #667eea; margin: 12px 0 10px 0;">
-                        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
-                            <h4 style="font-size: 13px; color: #2d3748; margin: 0; font-weight: 700;">Trade-Offs:</h4>
-                            ${rec.tradeoffs.map(t => `<div style="font-size: 12px;"><strong style="color: #667eea;">${t.label}:</strong> <span style="color: #2d3748;">${t.value}</span></div>`).join('')}
-                        </div>
-                    </div>
-                    
-                    <!-- Challenge Notes -->
-                    <div style="background: ${notes ? '#fffbeb' : '#f7fafc'}; border-left: 4px solid ${notes ? '#f59e0b' : '#cbd5e0'}; padding: 10px 14px; border-radius: 6px; margin-bottom: 10px;">
-                        <h4 style="font-size: 13px; color: #2d3748; margin: 0 0 4px 0; font-weight: 700; display: flex; align-items: center;">
-                            <span style="margin-right: 6px;">⚠️</span> Category Lead Notes / Challenge
-                        </h4>
-                        <p style="font-size: 12px; line-height: 1.4; color: ${notes ? '#78350f' : '#718096'}; margin: 0;">
-                            ${notes || 'No disagreement with recommendation - proceeding as suggested by tool.'}
-                        </p>
-                    </div>
-                    
-                    <!-- Decision Logic Footer -->
-                    <div style="background: #1a202c; padding: 12px 18px; border-radius: 6px; display: flex; align-items: center; gap: 20px;">
-                        <div style="color: #a0aec0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;">🔍 Key Inputs:</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 12px; flex: 1;">
-                            ${keyInputs.map(input => `<div style="font-size: 11px; color: #e2e8f0;"><span style="color: #a0aec0;">${input.label}:</span> <span style="font-weight: 600;">${input.value}</span></div>`).join('')}
-                        </div>
-                        <div style="color: #718096; font-size: 10px; flex-shrink: 0;">v1.5.0 | Full audit trail in PDF</div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(container);
-            
-            html2canvas(container, {
-                scale: 1.5,
-                backgroundColor: '#ffffff',
-                logging: false,
-                width: 1920,
-                height: 1080,
-                windowWidth: 1920
-            }).then(canvas => {
-                canvas.toBlob(blob => {
-                    if (!blob) {
-                        throw new Error('Failed to create image blob');
-                    }
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    const approachSlug = approach.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-                    const categorySlug = categoryText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                    const dateSlug = new Date().toISOString().split('T')[0];
-                    a.download = `sourcing-${approachSlug}-${categorySlug}-${dateSlug}.png`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    document.body.removeChild(container);
-                    btn.disabled = false;
-                    loading.style.display = 'none';
-                }, 'image/png');
-            }).catch(err => {
-                console.error('Screenshot failed:', err);
-                alert('Screenshot failed. Please try using your device screenshot tool instead.');
-                document.body.removeChild(container);
-                btn.disabled = false;
-                loading.style.display = 'none';
-            });
+            alert('Screenshot feature requires the full version. Use your browser\'s print or screenshot function.');
+        }
+        
+        function downloadPDF() {
+            alert('PDF export feature requires the full version. Use your browser\'s print function.');
         }
         
         function getRecommendationData(approach) {
-            const recommendations = {
+            var recommendations = {
                 own: {
                     title: 'Own & Build',
                     subtitle: 'Maximum control, full ownership, long-term strategic play',
-                    accepting: [
-                        'Maximum control over product roadmap and future iterations',
-                        'Full IP ownership - can prevent competitor copying',
-                        'Highest margin potential once at scale',
-                        'Manufacturing flexibility - can optimize suppliers over time'
-                    ],
-                    sacrificing: [
-                        '18-24 months to market (longest timeline)',
-                        '500K-2M+ upfront investment',
-                        'Highest risk if market doesn\'t materialize',
-                        'Opportunity cost - what else could resources build?'
-                    ],
-                    tradeoffs: [
-                        { label: 'Control', value: 'Maximum' },
-                        { label: 'Timeline', value: '18-24 months' },
-                        { label: 'Investment', value: '500K-2M+' },
-                        { label: 'Risk', value: 'Highest' }
-                    ]
+                    accepting: ['Maximum control over product roadmap', 'Full IP ownership', 'Highest margin potential', 'Manufacturing flexibility'],
+                    sacrificing: ['18-24 months to market', '500K-2M+ investment', 'Highest risk', 'Opportunity cost'],
+                    tradeoffs: [{label:'Control',value:'Maximum'},{label:'Timeline',value:'18-24 months'},{label:'Investment',value:'500K-2M+'},{label:'Risk',value:'Highest'}]
                 },
                 joint: {
                     title: 'Joint Development',
-                    subtitle: 'Shared R&D from scratch - use sparingly',
-                    accepting: [
-                        'Access to partner capabilities and IP you don\'t have',
-                        'Shared financial risk and investment',
-                        'Potentially stronger solution than either could build alone',
-                        'Shared ownership of resulting IP'
-                    ],
-                    sacrificing: [
-                        'Slowest approach - 18-24+ months due to coordination',
-                        'Shared margin forever (partner takes 15-25%)',
-                        'Shared control - need partner buy-in for decisions',
-                        '20-30% overhead for governance and coordination'
-                    ],
-                    tradeoffs: [
-                        { label: 'Control', value: 'Shared' },
-                        { label: 'Timeline', value: '18-24+ months' },
-                        { label: 'Investment', value: 'Shared (250K-1M)' },
-                        { label: 'Coordination', value: 'High complexity' }
-                    ]
+                    subtitle: 'Shared R&D from scratch',
+                    accepting: ['Partner capabilities access', 'Shared risk', 'Stronger solution', 'Shared IP'],
+                    sacrificing: ['18-24+ months', 'Shared margin forever', 'Shared control', 'Coordination overhead'],
+                    tradeoffs: [{label:'Control',value:'Shared'},{label:'Timeline',value:'18-24+ months'},{label:'Investment',value:'Shared'},{label:'Complexity',value:'High'}]
                 },
                 partner: {
                     title: 'Partner & Adapt',
-                    subtitle: 'Customize existing solution - the sweet spot',
-                    accepting: [
-                        'Fast to market - 6-9 months from brief to launch',
-                        'Lower investment & risk (50K-200K)',
-                        'Partner absorbs most R&D cost and technical risk',
-                        'Proven technology - partner has done core development'
-                    ],
-                    sacrificing: [
-                        'Limited control - constrained by partner\'s platform',
-                        'Reduced margin vs Source (partner takes 10-20%)',
-                        'Partner dependency for future improvements',
-                        'Can\'t make fundamental changes to core technology'
-                    ],
-                    tradeoffs: [
-                        { label: 'Control', value: 'Limited' },
-                        { label: 'Timeline', value: '6-9 months' },
-                        { label: 'Investment', value: '50K-200K' },
-                        { label: 'Flexibility', value: 'Within platform' }
-                    ]
+                    subtitle: 'Customize existing solution',
+                    accepting: ['6-9 months to market', 'Lower investment', 'Partner absorbs R&D risk', 'Proven technology'],
+                    sacrificing: ['Limited control', 'Reduced margin', 'Partner dependency', 'Platform constraints'],
+                    tradeoffs: [{label:'Control',value:'Limited'},{label:'Timeline',value:'6-9 months'},{label:'Investment',value:'50K-200K'},{label:'Flexibility',value:'Within platform'}]
                 },
                 source: {
                     title: 'Source & Specify',
-                    subtitle: 'Buy smart, move fast, optimize margin',
-                    accepting: [
-                        'Fastest to market - 3-6 months from supplier to first container',
-                        'Lowest investment (20K-75K) and risk',
-                        'Proven products with established manufacturing',
-                        'Excellent margin potential at high volumes'
-                    ],
-                    sacrificing: [
-                        'Minimal control - spec within supplier capabilities',
-                        'Limited differentiation (branding, colors, minor features)',
-                        'No proprietary IP or defensible moat',
-                        'Limited influence over future improvements'
-                    ],
-                    tradeoffs: [
-                        { label: 'Control', value: 'Minimal' },
-                        { label: 'Timeline', value: '3-6 months' },
-                        { label: 'Investment', value: '20K-75K' },
-                        { label: 'Differentiation', value: 'Limited' }
-                    ]
+                    subtitle: 'Buy smart, move fast',
+                    accepting: ['3-6 months to market', 'Lowest investment', 'Proven products', 'Good margins at scale'],
+                    sacrificing: ['Minimal control', 'Limited differentiation', 'No proprietary IP', 'Limited influence'],
+                    tradeoffs: [{label:'Control',value:'Minimal'},{label:'Timeline',value:'3-6 months'},{label:'Investment',value:'20K-75K'},{label:'Differentiation',value:'Limited'}]
                 }
             };
-            
             return recommendations[approach];
         }
     </script>
