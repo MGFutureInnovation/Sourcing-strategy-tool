@@ -1281,13 +1281,9 @@
         }
         
         // EmailJS Configuration and Email Notification Function
-        // ============================================
-        // GOOGLE SHEETS BACKEND CONFIGURATION
-        // ============================================
-        // Set this URL to enable cloud storage of assessments
-        // Follow the setup guide: google-sheets-setup.md
-        const GOOGLE_SCRIPT_URL = https://script.google.com/macros/s/AKfycbwjg3x8zTN7qNe_y9fStGVfVRnIlBNVLLZ-JEa8h94tO_940TMs8D8xSY_yiDOXcUzy/exec; // Replace with your Google Apps Script Web App URL
-        // Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
+        
+        // GOOGLE SHEETS BACKEND - Set URL to enable cloud storage
+        var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjg3x8zTN7qNe_y9fStGVfVRnIlBNVLLZ-JEa8h94tO_940TMs8D8xSY_yiDOXcUzy/exec';
         
         // Submit assessment to Google Sheets
         async function submitToCloud(assessmentData) {
@@ -1299,15 +1295,13 @@
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Required for Google Apps Script
+                    mode: 'no-cors',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(assessmentData)
                 });
                 
-                // With no-cors mode, we can't read the response
-                // but if fetch didn't throw, it likely succeeded
                 console.log('Assessment submitted to cloud');
                 return { success: true };
                 
@@ -1317,22 +1311,21 @@
             }
         }
         
-        // Update challenge notes in cloud (re-submits full assessment)
+        // Update challenge notes in cloud
         async function updateCloudNotes(assessmentId, notes) {
             if (!GOOGLE_SCRIPT_URL) return;
             
-            const assessments = getAssessments();
-            const assessment = assessments.find(a => a.id === assessmentId);
+            var assessments = getAssessments();
+            var assessment = assessments.find(function(a) { return a.id === assessmentId; });
             if (!assessment) return;
             
-            // Re-submit with updated notes
             assessment.challengeNotes = notes;
             await submitToCloud(formatForCloud(assessment));
         }
         
         // Format assessment data for cloud submission
         function formatForCloud(assessment) {
-            const approaches = {
+            var approaches = {
                 own: 'Own & Build',
                 joint: 'Joint Development',
                 partner: 'Partner & Adapt',
@@ -1341,7 +1334,7 @@
             
             return {
                 assessmentId: assessment.id,
-                userName: document.getElementById('userName')?.value || 'Anonymous',
+                userName: document.getElementById('userName') ? document.getElementById('userName').value : 'Anonymous',
                 category: assessment.category,
                 recommendation: approaches[assessment.approach] || assessment.approach,
                 scores: assessment.scores || lastCalculatedScores,
