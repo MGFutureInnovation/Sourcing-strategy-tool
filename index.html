@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mayborn Innovation Sourcing Strategy Tool</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         * {
@@ -672,6 +673,171 @@
             border-left: 4px solid #f59e0b;
         }
         
+        /* Decision Tree Styles */
+        .decision-tree {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .decision-tree-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .decision-tree-header h4 {
+            font-size: 16px;
+            color: #2d3748;
+            margin: 0;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .decision-tree-toggle {
+            font-size: 20px;
+            color: #667eea;
+            transition: transform 0.3s ease;
+        }
+        
+        .decision-tree-toggle.open {
+            transform: rotate(180deg);
+        }
+        
+        .decision-tree-content {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .decision-tree-content.open {
+            display: block;
+        }
+        
+        .scoring-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 15px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        
+        .scoring-row:last-child {
+            border-bottom: none;
+        }
+        
+        .scoring-input {
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .scoring-impact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .impact-chip {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .impact-positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .impact-negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .scoring-totals {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #cbd5e0;
+        }
+        
+        .total-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            background: white;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .total-item.winner {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+        
+        .total-label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .total-score {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            justify-content: flex-end;
+        }
+        
+        .btn-export {
+            padding: 12px 24px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-screenshot {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-pdf {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .btn-export:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         @media print {
             body {
                 background: white;
@@ -721,7 +887,7 @@
     <div class="container">
         <h1>Innovation Sourcing Strategy Tool</h1>
         <p class="subtitle">Answer a few questions to find the right approach for your project</p>
-        <div class="version-footer">v1.4.0 | December 2025 | Decision Radar</div>
+        <div class="version-footer">v1.5.0 | December 2025 | Audit Trail</div>
         <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
         
         <!-- Welcome Screen -->
@@ -1455,6 +1621,428 @@
             return 'source';
         }
         
+        // Generate decision tree breakdown HTML
+        function generateDecisionTree(scores, winner) {
+            const inputLabels = {
+                intent: 'Strategic Goal',
+                volume: 'Volume Expectation',
+                timeline: 'Timeline',
+                position: 'Market Position',
+                crowded: 'Market Crowdedness',
+                capability: 'Internal Capability',
+                ip: 'IP Ownership',
+                customization: 'Customization Level',
+                investment: 'Investment Appetite'
+            };
+            
+            const valueLabels = {
+                'core-brand': 'Build/defend core brand',
+                'test-learn': 'Test & learn',
+                'tactical': 'Fill tactical gap',
+                'market-share': 'Grab market share',
+                'new-entry': 'Enter new category',
+                'very-high': '200K+ units/yr',
+                'high': '50-200K units/yr',
+                'medium': '10-50K units/yr',
+                'low': '<10K units/yr',
+                'urgent': '<6 months',
+                'fast': '6-9 months',
+                'moderate': '9-15 months',
+                'patient': '18+ months',
+                'leader': 'Market leader',
+                'player': 'Established player',
+                'challenger': 'Challenger',
+                'new': 'No presence',
+                'open': 'Relatively open',
+                'crowded': 'Crowded',
+                'saturated': 'Saturated',
+                'strong': 'Strong',
+                'some': 'Some',
+                'weak': 'Weak',
+                'none': 'None',
+                'own-all': 'We own all IP',
+                'own-most': 'We own most',
+                'shared': 'Shared / JV',
+                'partner-owns': 'Partner owns',
+                'greenfield': 'Greenfield NPD',
+                'branding': 'Branding only',
+                'design': 'External design',
+                'performance': 'Performance tuning',
+                'core-tech': 'Core tech'
+            };
+            
+            // Calculate impacts for each input
+            const impacts = [];
+            
+            if (answers.intent === 'core-brand') {
+                impacts.push({ input: 'intent', chips: [{ approach: 'Own', delta: +3 }, { approach: 'Joint', delta: +2 }] });
+            } else if (answers.intent === 'test-learn') {
+                impacts.push({ input: 'intent', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Source', delta: +2 }] });
+            } else if (answers.intent === 'tactical') {
+                impacts.push({ input: 'intent', chips: [{ approach: 'Source', delta: +3 }, { approach: 'Partner', delta: +1 }] });
+            } else if (answers.intent === 'market-share') {
+                impacts.push({ input: 'intent', chips: [{ approach: 'Source', delta: +2 }, { approach: 'Partner', delta: +2 }] });
+            } else if (answers.intent === 'new-entry') {
+                impacts.push({ input: 'intent', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Joint', delta: +1 }] });
+            }
+            
+            if (answers.volume === 'very-high') {
+                impacts.push({ input: 'volume', chips: [{ approach: 'Own', delta: +3 }, { approach: 'Source', delta: +2 }] });
+            } else if (answers.volume === 'high') {
+                impacts.push({ input: 'volume', chips: [{ approach: 'Own', delta: +2 }, { approach: 'Source', delta: +2 }] });
+            } else if (answers.volume === 'medium') {
+                impacts.push({ input: 'volume', chips: [{ approach: 'Partner', delta: +2 }, { approach: 'Own', delta: -2 }] });
+            } else if (answers.volume === 'low') {
+                impacts.push({ input: 'volume', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Source', delta: +2 }, { approach: 'Own', delta: -4 }] });
+            }
+            
+            if (answers.timeline === 'urgent' || answers.timeline === 'fast') {
+                impacts.push({ input: 'timeline', chips: [{ approach: 'Source', delta: +3 }, { approach: 'Partner', delta: +2 }, { approach: 'Own', delta: -2 }, { approach: 'Joint', delta: -3 }] });
+            } else if (answers.timeline === 'patient') {
+                impacts.push({ input: 'timeline', chips: [{ approach: 'Own', delta: +2 }, { approach: 'Joint', delta: +1 }] });
+            }
+            
+            if (answers.position === 'leader') {
+                impacts.push({ input: 'position', chips: [{ approach: 'Own', delta: +3 }] });
+            } else if (answers.position === 'player') {
+                impacts.push({ input: 'position', chips: [{ approach: 'Own', delta: +1 }] });
+            } else if (answers.position === 'new') {
+                impacts.push({ input: 'position', chips: [{ approach: 'Partner', delta: +2 }, { approach: 'Source', delta: +1 }] });
+            }
+            
+            if (answers.crowded === 'open') {
+                impacts.push({ input: 'crowded', chips: [{ approach: 'Own', delta: +2 }] });
+            } else if (answers.crowded === 'crowded' || answers.crowded === 'saturated') {
+                if (answers.position === 'leader' || answers.position === 'player') {
+                    impacts.push({ input: 'crowded', chips: [{ approach: 'Own', delta: +1 }] });
+                } else {
+                    impacts.push({ input: 'crowded', chips: [{ approach: 'Source', delta: +2 }, { approach: 'Partner', delta: +1 }] });
+                }
+            }
+            
+            if (answers.capability === 'strong') {
+                impacts.push({ input: 'capability', chips: [{ approach: 'Own', delta: +4 }] });
+            } else if (answers.capability === 'some') {
+                impacts.push({ input: 'capability', chips: [{ approach: 'Joint', delta: +2 }, { approach: 'Partner', delta: +2 }] });
+            } else if (answers.capability === 'weak') {
+                impacts.push({ input: 'capability', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Source', delta: +2 }, { approach: 'Own', delta: -1 }] });
+            } else if (answers.capability === 'none') {
+                impacts.push({ input: 'capability', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Source', delta: +2 }, { approach: 'Own', delta: -2 }] });
+            }
+            
+            if (answers.ip === 'own-all') {
+                impacts.push({ input: 'ip', chips: [{ approach: 'Own', delta: +3 }] });
+            } else if (answers.ip === 'own-most') {
+                impacts.push({ input: 'ip', chips: [{ approach: 'Own', delta: +1 }, { approach: 'Joint', delta: +1 }] });
+            } else if (answers.ip === 'shared') {
+                impacts.push({ input: 'ip', chips: [{ approach: 'Joint', delta: +4 }, { approach: 'Own', delta: -2 }] });
+            } else if (answers.ip === 'partner-owns') {
+                impacts.push({ input: 'ip', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Own', delta: -3 }] });
+            } else if (answers.ip === 'greenfield') {
+                if (answers.capability === 'strong') {
+                    impacts.push({ input: 'ip', chips: [{ approach: 'Own', delta: +3 }] });
+                } else if (answers.capability === 'some') {
+                    impacts.push({ input: 'ip', chips: [{ approach: 'Joint', delta: +2 }, { approach: 'Own', delta: +1 }] });
+                } else {
+                    impacts.push({ input: 'ip', chips: [{ approach: 'Joint', delta: +2 }, { approach: 'Partner', delta: +1 }] });
+                }
+            } else if (answers.ip === 'none') {
+                impacts.push({ input: 'ip', chips: [{ approach: 'Source', delta: +1 }] });
+            }
+            
+            if (answers.investment === 'high') {
+                impacts.push({ input: 'investment', chips: [{ approach: 'Own', delta: +2 }, { approach: 'Joint', delta: +1 }] });
+            } else if (answers.investment === 'minimal' || answers.investment === 'low') {
+                impacts.push({ input: 'investment', chips: [{ approach: 'Source', delta: +2 }, { approach: 'Partner', delta: +2 }, { approach: 'Own', delta: -2 }] });
+            }
+            
+            if (answers.customization === 'branding') {
+                impacts.push({ input: 'customization', chips: [{ approach: 'Source', delta: +3 }, { approach: 'Partner', delta: -2 }] });
+            } else if (answers.customization === 'design') {
+                impacts.push({ input: 'customization', chips: [{ approach: 'Partner', delta: +3 }, { approach: 'Source', delta: -1 }] });
+            } else if (answers.customization === 'performance') {
+                impacts.push({ input: 'customization', chips: [{ approach: 'Partner', delta: +2 }, { approach: 'Joint', delta: +2 }, { approach: 'Source', delta: -2 }] });
+            } else if (answers.customization === 'core-tech') {
+                impacts.push({ input: 'customization', chips: [{ approach: 'Joint', delta: +3 }, { approach: 'Own', delta: +2 }, { approach: 'Partner', delta: -2 }] });
+            }
+            
+            const rowsHtml = impacts.map(impact => {
+                const inputValue = answers[impact.input];
+                const displayValue = valueLabels[inputValue] || inputValue;
+                const chipsHtml = impact.chips.map(chip => 
+                    `<span class="impact-chip ${chip.delta > 0 ? 'impact-positive' : 'impact-negative'}">${chip.approach} ${chip.delta > 0 ? '+' : ''}${chip.delta}</span>`
+                ).join('');
+                
+                return `
+                    <div class="scoring-row">
+                        <div class="scoring-input"><strong>${inputLabels[impact.input]}:</strong> ${displayValue}</div>
+                        <div class="scoring-impact">${chipsHtml}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            const approaches = [
+                { key: 'own', label: 'Own & Build', score: scores.own },
+                { key: 'joint', label: 'Joint Dev', score: scores.joint },
+                { key: 'partner', label: 'Partner', score: scores.partner },
+                { key: 'source', label: 'Source', score: scores.source }
+            ];
+            
+            const totalsHtml = approaches.map(a => `
+                <div class="total-item ${a.key === winner ? 'winner' : ''}">
+                    <div class="total-label">${a.label}</div>
+                    <div class="total-score" style="color: ${a.key === winner ? '#667eea' : '#2d3748'};">${a.score > 0 ? '+' : ''}${a.score}</div>
+                </div>
+            `).join('');
+            
+            return `
+                <div class="decision-tree">
+                    <div class="decision-tree-header" onclick="toggleDecisionTree()">
+                        <h4>🔍 Decision Logic (Click to expand for audit trail)</h4>
+                        <span class="decision-tree-toggle" id="treeToggle">▼</span>
+                    </div>
+                    <div class="decision-tree-content" id="treeContent">
+                        <div style="font-size: 13px; color: #718096; margin-bottom: 12px;">
+                            Each input contributed points to one or more approaches. Highest total score wins.
+                        </div>
+                        ${rowsHtml}
+                        <div class="scoring-totals">
+                            ${totalsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function toggleDecisionTree() {
+            const content = document.getElementById('treeContent');
+            const toggle = document.getElementById('treeToggle');
+            const isOpen = content.classList.contains('open');
+            
+            if (isOpen) {
+                content.classList.remove('open');
+                toggle.classList.remove('open');
+            } else {
+                content.classList.add('open');
+                toggle.classList.add('open');
+            }
+        }
+        
+        // PDF Export Function
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            const approach = calculateRecommendation();
+            const rec = getRecommendationData(approach);
+            const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+            const dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const userName = document.getElementById('userName')?.value || 'Not specified';
+            const notes = document.getElementById('challengeNotes')?.value || '';
+            const currentId = localStorage.getItem('current_assessment_id') || 'N/A';
+            
+            const pageWidth = 210;
+            const margin = 20;
+            const contentWidth = pageWidth - (margin * 2);
+            let y = 20;
+            
+            // Header
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 0, pageWidth, 45, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Sourcing Strategy Assessment', margin, 20);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text(rec.title + ' - ' + rec.subtitle, margin, 30);
+            
+            doc.setFontSize(10);
+            doc.text('ID: ' + currentId + ' | Generated: ' + dateText, margin, 40);
+            
+            y = 55;
+            
+            // Assessment Details Box
+            doc.setFillColor(247, 250, 252);
+            doc.rect(margin, y, contentWidth, 22, 'F');
+            doc.setDrawColor(226, 232, 240);
+            doc.rect(margin, y, contentWidth, 22, 'S');
+            
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ASSESSMENT DETAILS', margin + 5, y + 7);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.text('Sub-category: ' + categoryText + '   |   Assessed by: ' + userName + '   |   Recommendation: ' + rec.title, margin + 5, y + 16);
+            
+            y += 30;
+            
+            // Decision Scores
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DECISION SCORES', margin, y);
+            y += 7;
+            
+            const scores = lastCalculatedScores;
+            const approaches = [
+                { label: 'Own & Build', score: scores.own, key: 'own' },
+                { label: 'Joint Dev', score: scores.joint, key: 'joint' },
+                { label: 'Partner', score: scores.partner, key: 'partner' },
+                { label: 'Source', score: scores.source, key: 'source' }
+            ].sort((a, b) => b.score - a.score);
+            
+            const boxWidth = (contentWidth - 15) / 4;
+            approaches.forEach((a, i) => {
+                const x = margin + (i * (boxWidth + 5));
+                const isWinner = a.key === approach;
+                
+                if (isWinner) {
+                    doc.setFillColor(238, 242, 255);
+                    doc.setDrawColor(102, 126, 234);
+                } else {
+                    doc.setFillColor(255, 255, 255);
+                    doc.setDrawColor(226, 232, 240);
+                }
+                doc.rect(x, y, boxWidth, 16, 'FD');
+                
+                doc.setTextColor(113, 128, 150);
+                doc.setFontSize(7);
+                doc.text(a.label, x + boxWidth/2, y + 5, { align: 'center' });
+                
+                doc.setTextColor(isWinner ? 102 : 45, isWinner ? 126 : 55, isWinner ? 234 : 72);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text((a.score > 0 ? '+' : '') + a.score.toString(), x + boxWidth/2, y + 12, { align: 'center' });
+            });
+            
+            y += 24;
+            
+            // Two columns: Accepting / Sacrificing
+            const colWidth = (contentWidth - 10) / 2;
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(16, 185, 129);
+            doc.text('WHAT YOU\'RE ACCEPTING', margin, y);
+            doc.setTextColor(239, 68, 68);
+            doc.text('WHAT YOU\'RE SACRIFICING', margin + colWidth + 10, y);
+            y += 5;
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(45, 55, 72);
+            
+            const maxItems = Math.max(rec.accepting.length, rec.sacrificing.length);
+            for (let i = 0; i < maxItems; i++) {
+                if (rec.accepting[i]) {
+                    const lines = doc.splitTextToSize('✓ ' + rec.accepting[i], colWidth - 5);
+                    doc.text(lines, margin, y);
+                }
+                if (rec.sacrificing[i]) {
+                    const lines = doc.splitTextToSize('✗ ' + rec.sacrificing[i], colWidth - 5);
+                    doc.text(lines, margin + colWidth + 10, y);
+                }
+                y += 10;
+            }
+            
+            y += 3;
+            
+            // Key Trade-offs
+            doc.setFillColor(247, 250, 252);
+            doc.rect(margin, y, contentWidth, 14, 'F');
+            doc.setDrawColor(102, 126, 234);
+            doc.setLineWidth(0.8);
+            doc.line(margin, y, margin, y + 14);
+            
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('KEY TRADE-OFFS: ', margin + 3, y + 5);
+            
+            doc.setFont('helvetica', 'normal');
+            const tradeoffText = rec.tradeoffs.map(t => t.label + ': ' + t.value).join('  |  ');
+            doc.text(tradeoffText, margin + 32, y + 5);
+            
+            y += 20;
+            
+            // Challenge Notes
+            if (notes) {
+                doc.setFillColor(255, 251, 235);
+                doc.rect(margin, y, contentWidth, 18, 'F');
+                doc.setDrawColor(245, 158, 11);
+                doc.setLineWidth(0.8);
+                doc.line(margin, y, margin, y + 18);
+                
+                doc.setTextColor(120, 53, 15);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('CATEGORY LEAD NOTES / CHALLENGE:', margin + 3, y + 5);
+                
+                doc.setFont('helvetica', 'normal');
+                const noteLines = doc.splitTextToSize(notes, contentWidth - 8);
+                doc.text(noteLines.slice(0, 2), margin + 3, y + 11);
+                
+                y += 24;
+            }
+            
+            // Decision Logic Section
+            doc.setTextColor(45, 55, 72);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DECISION LOGIC - AUDIT TRAIL', margin, y);
+            y += 6;
+            
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(113, 128, 150);
+            doc.text('Each input contributed points. Green = positive, Red = negative. Highest total wins.', margin, y);
+            y += 5;
+            
+            // Input table
+            const inputLabels = {
+                intent: 'Strategic Goal',
+                volume: 'Volume',
+                timeline: 'Timeline',
+                position: 'Position',
+                crowded: 'Crowdedness',
+                capability: 'Capability',
+                ip: 'IP Ownership',
+                customization: 'Customization',
+                investment: 'Investment'
+            };
+            
+            doc.setFontSize(8);
+            doc.setTextColor(45, 55, 72);
+            
+            Object.entries(answers).filter(([k]) => k !== 'category').forEach(([key, value]) => {
+                doc.setFont('helvetica', 'bold');
+                doc.text(inputLabels[key] + ':', margin, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text(String(value), margin + 35, y);
+                y += 5;
+                
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+            });
+            
+            // Footer
+            doc.setFontSize(7);
+            doc.setTextColor(113, 128, 150);
+            doc.text('Official assessment record. Tool v1.5.0 | Mayborn Innovation Sourcing Strategy Tool', margin, 287);
+            
+            // Save
+            const categorySlug = categoryText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const dateSlug = new Date().toISOString().split('T')[0];
+            doc.save(`sourcing-audit-${approach}-${categorySlug}-${dateSlug}.pdf`);
+        }
+
         // Generate SVG radar chart
         function generateRadarChart(scores, winner) {
             const size = 280;
@@ -1858,17 +2446,24 @@
             const recommendationDiv = document.getElementById('recommendation');
             const firstSection = recommendationDiv.querySelector('.section');
             
-            // Add screenshot button
-            const screenshotBtnHtml = `
-                <div style="text-align: right; margin-bottom: 15px;">
-                    <button class="btn-primary" id="screenshotBtn" onclick="downloadScreenshot()" style="width: auto; padding: 12px 24px; font-size: 15px;">
-                        Download Screenshot
+            // Add export buttons (Screenshot + PDF)
+            const exportBtnHtml = `
+                <div class="export-buttons">
+                    <button class="btn-export btn-screenshot" id="screenshotBtn" onclick="downloadScreenshot()">
+                        📷 Download Screenshot (PowerPoint)
+                    </button>
+                    <button class="btn-export btn-pdf" id="pdfBtn" onclick="downloadPDF()">
+                        📄 Download PDF (Audit Trail)
                     </button>
                     <span id="screenshotLoading" style="display: none; margin-left: 10px; color: #667eea; font-size: 14px;">Generating...</span>
                 </div>
             `;
-            firstSection.insertAdjacentHTML('beforebegin', screenshotBtnHtml);
+            firstSection.insertAdjacentHTML('beforebegin', exportBtnHtml);
             firstSection.insertAdjacentHTML('beforebegin', summaryHtml);
+            
+            // Add decision tree after summary
+            const decisionTreeHtml = generateDecisionTree(lastCalculatedScores, approach);
+            document.querySelector('.recommendation-summary').insertAdjacentHTML('beforeend', decisionTreeHtml);
             
             // Check if delay warning is needed
             const needsDelayWarning = (
@@ -1968,13 +2563,8 @@
             });
             
             // Remove dynamically added elements
-            const summaryElements = document.querySelectorAll('.recommendation-summary, .delay-warning-box, .decision-analysis');
+            const summaryElements = document.querySelectorAll('.recommendation-summary, .delay-warning-box, .decision-analysis, .decision-tree, .export-buttons');
             summaryElements.forEach(el => el.remove());
-            
-            const screenshotBtn = document.getElementById('screenshotBtn');
-            if (screenshotBtn && screenshotBtn.parentElement) {
-                screenshotBtn.parentElement.remove();
-            }
             
             // Remove product benefit from header
             const benefitDiv = document.querySelector('.recommendation-header > div:last-child');
@@ -2219,6 +2809,7 @@
             const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
             const dateText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
             const notes = document.getElementById('challengeNotes')?.value || '';
+            const currentId = localStorage.getItem('current_assessment_id') || '';
             
             // Get scores for mini radar in screenshot
             const scores = lastCalculatedScores;
@@ -2232,83 +2823,98 @@
             const winnerScore = sorted[0].score;
             const isCloseCall = (winnerScore - sorted[1].score) <= 2;
             
+            // Build compact decision logic for footer
+            const keyInputs = [
+                { label: 'Goal', value: answers.intent },
+                { label: 'Volume', value: answers.volume },
+                { label: 'Timeline', value: answers.timeline },
+                { label: 'Capability', value: answers.capability },
+                { label: 'IP', value: answers.ip },
+                { label: 'Customization', value: answers.customization }
+            ];
+            
             const container = document.createElement('div');
             container.className = 'screenshot-container';
             container.innerHTML = `
-                <div style="width: 1920px; height: 1080px; background: white; padding: 35px 60px 35px 50px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+                <div style="width: 1920px; height: 1080px; background: white; padding: 30px 55px 25px 45px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
                     <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 3px solid #667eea; gap: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 3px solid #667eea; gap: 20px;">
                         <div style="flex: 1; min-width: 0;">
-                            <h1 style="font-size: 32px; color: #2d3748; margin: 0 0 6px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ${rec.title}</h1>
-                            <p style="font-size: 16px; color: #718096; margin: 0; line-height: 1.3;">${rec.subtitle}</p>
+                            <h1 style="font-size: 30px; color: #2d3748; margin: 0 0 5px 0; font-weight: 700; line-height: 1.2;">Sourcing Strategy: ${rec.title}</h1>
+                            <p style="font-size: 15px; color: #718096; margin: 0; line-height: 1.3;">${rec.subtitle}</p>
                         </div>
-                        <div style="text-align: right; font-size: 14px; color: #4a5568; flex-shrink: 0; min-width: 260px;">
-                            <div style="margin-bottom: 3px;"><strong>Category:</strong> ${categoryText}</div>
-                            <div style="margin-bottom: 6px;"><strong>Date:</strong> ${dateText}</div>
-                            <div style="padding: 5px 12px; background: #667eea; color: white; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 13px;">${rec.title}</div>
+                        <div style="text-align: right; font-size: 13px; color: #4a5568; flex-shrink: 0; min-width: 240px;">
+                            <div style="margin-bottom: 2px;"><strong>Category:</strong> ${categoryText}</div>
+                            <div style="margin-bottom: 2px;"><strong>Date:</strong> ${dateText}</div>
+                            <div style="margin-bottom: 5px; font-size: 11px; color: #a0aec0;">ID: ${currentId}</div>
+                            <div style="padding: 4px 10px; background: #667eea; color: white; border-radius: 5px; display: inline-block; font-weight: 600; font-size: 12px;">${rec.title}</div>
                         </div>
                     </div>
                     
                     <!-- Main Content: 3 Column Layout -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 280px; gap: 25px; flex: 1; min-height: 0;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 260px; gap: 22px; flex: 1; min-height: 0;">
                         
                         <!-- Left Column: Accepting -->
                         <div style="display: flex; flex-direction: column;">
-                            <h3 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #38a169; margin-right: 8px; font-size: 20px;">✓</span> What You're Accepting
+                            <h3 style="font-size: 16px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; display: flex; align-items: center;">
+                                <span style="color: #38a169; margin-right: 6px; font-size: 18px;">✓</span> What You're Accepting
                             </h3>
                             <ul style="list-style: none; padding: 0; margin: 0; flex: 1;">
-                                ${rec.accepting.map(item => `<li style="padding: 7px 0; color: #2d3748; font-size: 14px; line-height: 1.45; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 8px;">✓</span>${item}</li>`).join('')}
+                                ${rec.accepting.map(item => `<li style="padding: 6px 0; color: #2d3748; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #e2e8f0;"><span style="color: #38a169; font-weight: bold; margin-right: 6px;">✓</span>${item}</li>`).join('')}
                             </ul>
                         </div>
                         
                         <!-- Middle Column: Sacrificing -->
                         <div style="display: flex; flex-direction: column;">
-                            <h3 style="font-size: 18px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; display: flex; align-items: center;">
-                                <span style="color: #e53e3e; margin-right: 8px; font-size: 20px;">✗</span> What You're Sacrificing
+                            <h3 style="font-size: 16px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; display: flex; align-items: center;">
+                                <span style="color: #e53e3e; margin-right: 6px; font-size: 18px;">✗</span> What You're Sacrificing
                             </h3>
                             <ul style="list-style: none; padding: 0; margin: 0; flex: 1;">
-                                ${rec.sacrificing.map(item => `<li style="padding: 7px 0; color: #2d3748; font-size: 14px; line-height: 1.45; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 8px;">✗</span>${item}</li>`).join('')}
+                                ${rec.sacrificing.map(item => `<li style="padding: 6px 0; color: #2d3748; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #e2e8f0;"><span style="color: #e53e3e; font-weight: bold; margin-right: 6px;">✗</span>${item}</li>`).join('')}
                             </ul>
                         </div>
                         
-                        <!-- Right Column: Decision Radar -->
-                        <div style="background: #f7fafc; border-radius: 10px; padding: 15px; border: 2px solid #e2e8f0; display: flex; flex-direction: column;">
-                            <h4 style="font-size: 14px; color: #2d3748; margin: 0 0 10px 0; font-weight: 700; text-align: center;">📊 Decision Scores</h4>
-                            <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                        <!-- Right Column: Decision Scores -->
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px; border: 2px solid #e2e8f0; display: flex; flex-direction: column;">
+                            <h4 style="font-size: 13px; color: #2d3748; margin: 0 0 8px 0; font-weight: 700; text-align: center;">📊 Decision Scores</h4>
+                            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
                                 ${sorted.map((item, i) => `
-                                    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: ${i === 0 ? '#eef2ff' : 'white'}; border-radius: 6px; border: 2px solid ${i === 0 ? '#667eea' : '#e2e8f0'};">
-                                        <div style="width: 12px; height: 12px; border-radius: 3px; background: ${item.color}; flex-shrink: 0;"></div>
-                                        <div style="flex: 1; font-size: 13px; font-weight: ${i === 0 ? '700' : '500'}; color: #2d3748;">${item.label}</div>
-                                        <div style="font-size: 15px; font-weight: 700; color: ${item.color};">${item.score > 0 ? '+' : ''}${item.score}</div>
+                                    <div style="display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: ${i === 0 ? '#eef2ff' : 'white'}; border-radius: 5px; border: 2px solid ${i === 0 ? '#667eea' : '#e2e8f0'};">
+                                        <div style="width: 10px; height: 10px; border-radius: 3px; background: ${item.color}; flex-shrink: 0;"></div>
+                                        <div style="flex: 1; font-size: 12px; font-weight: ${i === 0 ? '700' : '500'}; color: #2d3748;">${item.label}</div>
+                                        <div style="font-size: 14px; font-weight: 700; color: ${item.color};">${item.score > 0 ? '+' : ''}${item.score}</div>
                                     </div>
                                 `).join('')}
                             </div>
-                            ${isCloseCall ? `<div style="margin-top: 10px; padding: 8px; background: #fffbeb; border-radius: 6px; font-size: 11px; color: #92400e; text-align: center; border-left: 3px solid #f59e0b;"><strong>Close call</strong> - ${sorted[1].label} was ${winnerScore - sorted[1].score} pts behind</div>` : ''}
+                            ${isCloseCall ? `<div style="margin-top: 8px; padding: 6px; background: #fffbeb; border-radius: 5px; font-size: 10px; color: #92400e; text-align: center; border-left: 3px solid #f59e0b;"><strong>Close call</strong> - ${sorted[1].label} ${winnerScore - sorted[1].score} pts behind</div>` : ''}
                         </div>
                     </div>
                     
                     <!-- Key Trade-Offs Row -->
-                    <div style="background: #f7fafc; padding: 14px 18px; border-radius: 8px; border-left: 5px solid #667eea; margin: 15px 0;">
-                        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
-                            <h4 style="font-size: 15px; color: #2d3748; margin: 0; font-weight: 700;">Key Trade-Offs:</h4>
-                            ${rec.tradeoffs.map(t => `<div style="font-size: 14px;"><strong style="color: #667eea;">${t.label}:</strong> <span style="color: #2d3748;">${t.value}</span></div>`).join('')}
+                    <div style="background: #f7fafc; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #667eea; margin: 12px 0 10px 0;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+                            <h4 style="font-size: 13px; color: #2d3748; margin: 0; font-weight: 700;">Trade-Offs:</h4>
+                            ${rec.tradeoffs.map(t => `<div style="font-size: 12px;"><strong style="color: #667eea;">${t.label}:</strong> <span style="color: #2d3748;">${t.value}</span></div>`).join('')}
                         </div>
                     </div>
                     
                     <!-- Challenge Notes -->
-                    <div style="background: ${notes ? '#fffbeb' : '#f7fafc'}; border-left: 5px solid ${notes ? '#f59e0b' : '#cbd5e0'}; padding: 14px 18px; border-radius: 8px; margin-bottom: 12px;">
-                        <h4 style="font-size: 15px; color: #2d3748; margin: 0 0 6px 0; font-weight: 700; display: flex; align-items: center;">
-                            <span style="margin-right: 8px;">⚠️</span> Category Lead Notes / Challenge
+                    <div style="background: ${notes ? '#fffbeb' : '#f7fafc'}; border-left: 4px solid ${notes ? '#f59e0b' : '#cbd5e0'}; padding: 10px 14px; border-radius: 6px; margin-bottom: 10px;">
+                        <h4 style="font-size: 13px; color: #2d3748; margin: 0 0 4px 0; font-weight: 700; display: flex; align-items: center;">
+                            <span style="margin-right: 6px;">⚠️</span> Category Lead Notes / Challenge
                         </h4>
-                        <p style="font-size: 14px; line-height: 1.5; color: ${notes ? '#78350f' : '#718096'}; margin: 0;">
+                        <p style="font-size: 12px; line-height: 1.4; color: ${notes ? '#78350f' : '#718096'}; margin: 0;">
                             ${notes || 'No disagreement with recommendation - proceeding as suggested by tool.'}
                         </p>
                     </div>
                     
-                    <!-- Footer -->
-                    <div style="background: #edf2f7; padding: 8px 18px; border-radius: 6px; text-align: center; font-size: 12px; color: #4a5568;">
-                        <strong>Note:</strong> This recommendation should be referenced in scoping documents and remain consistent through business case approval.
+                    <!-- Decision Logic Footer -->
+                    <div style="background: #1a202c; padding: 12px 18px; border-radius: 6px; display: flex; align-items: center; gap: 20px;">
+                        <div style="color: #a0aec0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;">🔍 Key Inputs:</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; flex: 1;">
+                            ${keyInputs.map(input => `<div style="font-size: 11px; color: #e2e8f0;"><span style="color: #a0aec0;">${input.label}:</span> <span style="font-weight: 600;">${input.value}</span></div>`).join('')}
+                        </div>
+                        <div style="color: #718096; font-size: 10px; flex-shrink: 0;">v1.5.0 | Full audit trail in PDF</div>
                     </div>
                 </div>
             `;
