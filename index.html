@@ -887,8 +887,9 @@
     <div class="container">
         <h1>Innovation Sourcing Strategy Tool</h1>
         <p class="subtitle">Answer a few questions to find the right approach for your project</p>
-        <div class="version-footer">v1.5.0 | December 2025 | Audit Trail</div>
+        <div class="version-footer">v1.6.0 | December 2025 | Cloud Sync</div>
         <a href="#" onclick="showAdminView(); return false;" style="position: absolute; top: 20px; right: 20px; font-size: 13px; color: #718096; text-decoration: none;">Admin View</a>
+        <div id="cloudStatus" style="position: absolute; top: 45px; right: 20px; font-size: 11px; padding: 3px 8px; border-radius: 4px; display: none;"></div>
         
         <!-- Welcome Screen -->
         <div class="welcome-screen" id="welcomeScreen">
@@ -1280,6 +1281,75 @@
         }
         
         // EmailJS Configuration and Email Notification Function
+        // ============================================
+        // GOOGLE SHEETS BACKEND CONFIGURATION
+        // ============================================
+        // Set this URL to enable cloud storage of assessments
+        // Follow the setup guide: google-sheets-setup.md
+        const GOOGLE_SCRIPT_URL = https://script.google.com/macros/s/AKfycbwjg3x8zTN7qNe_y9fStGVfVRnIlBNVLLZ-JEa8h94tO_940TMs8D8xSY_yiDOXcUzy/exec; // Replace with your Google Apps Script Web App URL
+        // Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
+        
+        // Submit assessment to Google Sheets
+        async function submitToCloud(assessmentData) {
+            if (!GOOGLE_SCRIPT_URL) {
+                console.log('Cloud storage not configured - using localStorage only');
+                return { success: false, reason: 'not_configured' };
+            }
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(assessmentData)
+                });
+                
+                // With no-cors mode, we can't read the response
+                // but if fetch didn't throw, it likely succeeded
+                console.log('Assessment submitted to cloud');
+                return { success: true };
+                
+            } catch (error) {
+                console.warn('Cloud submission failed:', error);
+                return { success: false, reason: 'network_error', error: error.message };
+            }
+        }
+        
+        // Update challenge notes in cloud (re-submits full assessment)
+        async function updateCloudNotes(assessmentId, notes) {
+            if (!GOOGLE_SCRIPT_URL) return;
+            
+            const assessments = getAssessments();
+            const assessment = assessments.find(a => a.id === assessmentId);
+            if (!assessment) return;
+            
+            // Re-submit with updated notes
+            assessment.challengeNotes = notes;
+            await submitToCloud(formatForCloud(assessment));
+        }
+        
+        // Format assessment data for cloud submission
+        function formatForCloud(assessment) {
+            const approaches = {
+                own: 'Own & Build',
+                joint: 'Joint Development',
+                partner: 'Partner & Adapt',
+                source: 'Source & Specify'
+            };
+            
+            return {
+                assessmentId: assessment.id,
+                userName: document.getElementById('userName')?.value || 'Anonymous',
+                category: assessment.category,
+                recommendation: approaches[assessment.approach] || assessment.approach,
+                scores: assessment.scores || lastCalculatedScores,
+                answers: assessment.answers,
+                challengeNotes: assessment.challengeNotes || ''
+            };
+        }
+        
         const EMAIL_CONFIG = {
             enabled: true,
             serviceId: 'YOUR_SERVICE_ID',
@@ -2587,7 +2657,25 @@
             nextBtn.disabled = true;
         }
         
+        // Initialize
         updateProgress();
+        
+        // Show cloud status indicator
+        function updateCloudStatus() {
+            const statusEl = document.getElementById('cloudStatus');
+            if (GOOGLE_SCRIPT_URL) {
+                statusEl.style.display = 'block';
+                statusEl.style.background = '#d1fae5';
+                statusEl.style.color = '#065f46';
+                statusEl.innerHTML = '☁️ Cloud sync enabled';
+            } else {
+                statusEl.style.display = 'block';
+                statusEl.style.background = '#fef3c7';
+                statusEl.style.color = '#92400e';
+                statusEl.innerHTML = '💾 Local storage only';
+            }
+        }
+        updateCloudStatus();
         
         // Assessment storage functions
         function generateAssessmentId() {
@@ -2599,6 +2687,17 @@
             assessments.push(assessment);
             localStorage.setItem('mayborn_assessments', JSON.stringify(assessments));
             localStorage.setItem('current_assessment_id', assessment.id);
+            
+            // Also submit to cloud (non-blocking)
+            submitToCloud(formatForCloud(assessment)).then(result => {
+                if (result.success) {
+                    console.log('Assessment synced to cloud');
+                } else if (result.reason === 'not_configured') {
+                    // Silent - localStorage only mode
+                } else {
+                    console.warn('Cloud sync failed - data saved locally');
+                }
+            });
         }
         
         function getAssessments() {
@@ -2788,6 +2887,12 @@
             const notesTextarea = document.getElementById('challengeNotes');
             const notes = notesTextarea ? notesTextarea.value : '';
             updateAssessmentNotes(notes);
+            
+            // Sync to cloud (re-submit with updated notes)
+            const currentId = localStorage.getItem('current_assessment_id');
+            if (currentId) {
+                updateCloudNotes(currentId, notes);
+            }
             
             const confirmation = document.getElementById('saveConfirmation');
             confirmation.style.display = 'block';
